@@ -1,0 +1,70 @@
+use anchor_lang::prelude::*;
+
+use crate::constants::*;
+use crate::errors::*;
+use crate::state::WorkspaceConfig;
+
+pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Result<()> {
+    require!(
+        params.reviewers.len() <= MAX_REVIEWERS,
+        BountyError::TooManyReviewers
+    );
+    require!(params.quorum_threshold > 0, BountyError::QuorumNotReached);
+    require!(
+        usize::from(params.quorum_threshold) <= params.reviewers.len(),
+        BountyError::QuorumNotReached
+    );
+    require!(
+        params.challenge_window_secs > 0,
+        BountyError::InvalidDeadline
+    );
+    require!(params.review_timeout_secs > 0, BountyError::InvalidDeadline);
+
+    let workspace = &mut ctx.accounts.workspace;
+    workspace.authority = ctx.accounts.authority.key();
+    workspace.workspace_id = params.workspace_id;
+    workspace.bounty_count = 0;
+    workspace.quorum_threshold = params.quorum_threshold;
+    workspace.challenge_window_secs = params.challenge_window_secs;
+    workspace.review_timeout_secs = params.review_timeout_secs;
+    workspace.fee_bps = params.fee_bps;
+    workspace.bond_bps = params.bond_bps;
+    workspace.reviewers = params.reviewers;
+    workspace.is_paused = false;
+    workspace.bump = ctx.bumps.workspace;
+
+    Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct WorkspaceParams {
+    pub workspace_id: u64,
+    pub quorum_threshold: u8,
+    pub challenge_window_secs: i64,
+    pub review_timeout_secs: i64,
+    pub fee_bps: u16,
+    pub bond_bps: u16,
+    pub reviewers: Vec<Pubkey>,
+}
+
+#[derive(Accounts)]
+#[instruction(params: WorkspaceParams)]
+pub struct InitializeWorkspace<'info> {
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + WorkspaceConfig::INIT_SPACE,
+        seeds = [
+            WORKSPACE_SEED, 
+            authority.key().as_ref(), 
+            &params.workspace_id.to_le_bytes()
+        ],
+        bump
+    )]
+    pub workspace: Account<'info, WorkspaceConfig>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
