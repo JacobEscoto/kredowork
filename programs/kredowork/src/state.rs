@@ -28,6 +28,7 @@ pub struct WorkspaceConfig {
     pub workspace_id: u64,
     pub bounty_count: u64,
     pub quorum_threshold: u8,
+    pub max_submission_attempts: u8,
     pub challenge_window_secs: i64,
     pub review_timeout_secs: i64,
     pub fee_bps: u16,

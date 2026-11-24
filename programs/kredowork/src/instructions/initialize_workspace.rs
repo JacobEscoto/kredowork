@@ -10,6 +10,7 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
         BountyError::TooManyReviewers
     );
     require!(params.quorum_threshold > 0, BountyError::QuorumNotReached);
+    require!(params.max_submission_atempts > 0, BountyError::InvalidStateTransition);
     require!(
         usize::from(params.quorum_threshold) <= params.reviewers.len(),
         BountyError::QuorumNotReached
@@ -25,6 +26,7 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
     workspace.workspace_id = params.workspace_id;
     workspace.bounty_count = 0;
     workspace.quorum_threshold = params.quorum_threshold;
+    workspace.max_submission_attempts = params.max_submission_atempts;
     workspace.challenge_window_secs = params.challenge_window_secs;
     workspace.review_timeout_secs = params.review_timeout_secs;
     workspace.fee_bps = params.fee_bps;
@@ -40,6 +42,7 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
 pub struct WorkspaceParams {
     pub workspace_id: u64,
     pub quorum_threshold: u8,
+    pub max_submission_atempts: u8,
     pub challenge_window_secs: i64,
     pub review_timeout_secs: i64,
     pub fee_bps: u16,

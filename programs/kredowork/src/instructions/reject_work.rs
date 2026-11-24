@@ -1,0 +1,77 @@
+use crate::constants::*;
+use crate::state::*;
+use crate::BountyError;
+use anchor_lang::prelude::*;
+
+/// A registered reviewer rejects a submitted work, resetting the bounty to `Open`
+/// so that another contributor can claim it (up to `max_submission_attempts`).
+/// The reviewer's index bit in `approvals_mask` is NOT written — masks are only
+/// meaningful during the approval flow and are reset when the bounty goes back to `Open`.
+pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
+    let workspace = &ctx.accounts.workspace;
+    require!(!workspace.is_paused, BountyError::WorkspacePaused);
+
+    let reviewer_key = ctx.accounts.reviewer.key();
+    workspace
+        .reviewers
+        .iter()
+        .position(|r| r == &reviewer_key)
+        .ok_or(BountyError::UnauthorizedReviewer)?;
+
+    let bounty = &mut ctx.accounts.bounty;
+    require!(
+        bounty.bounty_id == bounty_id,
+        BountyError::InvalidStateTransition
+    );
+    require!(
+        bounty.status == BountyStatus::Submitted,
+        BountyError::InvalidStateTransition
+    );
+
+    // Prevent the submitter from self-rejecting (same guard as self-approval).
+    if let Some(claimant) = bounty.claimant {
+        require!(
+            claimant != reviewer_key,
+            BountyError::SelfApprovalNotAllowed
+        );
+    }
+
+    // Reset submission state so a new contributor can try.
+    bounty.status = BountyStatus::Rejected;
+    bounty.claimant = None;
+    bounty.delivery_hash = None;
+    bounty.submitted_at_ts = None;
+    bounty.approvals_count = 0;
+    bounty.approvals_mask = 0;
+    bounty.window_ends_at_ts = None;
+
+    Ok(())
+}
+
+#[derive(Accounts)]
+#[instruction(bounty_id: u64)]
+pub struct RejectWork<'info> {
+    #[account(
+        seeds = [
+            WORKSPACE_SEED,
+            workspace.authority.as_ref(),
+            &workspace.workspace_id.to_le_bytes()
+        ],
+        bump = workspace.bump
+    )]
+    pub workspace: Account<'info, WorkspaceConfig>,
+
+    #[account(
+        mut,
+        has_one = workspace,
+        seeds = [
+            BOUNTY_SEED,
+            workspace.key().as_ref(),
+            &bounty_id.to_le_bytes()
+        ],
+        bump = bounty.bump
+    )]
+    pub bounty: Account<'info, BountyAccount>,
+
+    pub reviewer: Signer<'info>,
+}

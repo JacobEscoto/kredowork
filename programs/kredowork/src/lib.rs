@@ -42,6 +42,10 @@ pub mod kredowork {
         instructions::approve_work::handler(ctx, bounty_id)
     }
 
+    pub fn reject_work(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
+        instructions::reject_work::handler(ctx, bounty_id)
+    }
+
     pub fn finalize_payout(ctx: Context<FinalizePayout>, bounty_id: u64) -> Result<()> {
         instructions::finalize_payout::handler(ctx, bounty_id)
     }
