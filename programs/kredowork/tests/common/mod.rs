@@ -5,7 +5,9 @@ use std::path::PathBuf;
 use anchor_lang::{prelude::*, InstructionData, ToAccountMetas};
 use kredowork::{
     constants::{BOUNTY_SEED, VAULT_SEED, WORKSPACE_SEED},
-    instructions::initialize_workspace::WorkspaceParams,
+    instructions::{
+        initialize_workspace::WorkspaceParams, update_workspace::UpdateWorkspaceParams,
+    },
     state::{BountyAccount, WorkspaceConfig},
     ID as PROGRAM_ID,
 };
@@ -16,7 +18,7 @@ use solana_transaction::{Instruction, Transaction};
 
 pub const PROGRAM_SO_ENV: &str = "KREDOWORK_PROGRAM_SO";
 
-/// Comisión por firma que LiteSVM descuenta de los pagadores de transacción.
+/// Signature fee that LiteSVM deducts from transaction payers.
 pub const LITESVM_TX_FEE: u64 = 5_000;
 
 pub fn program_so_path() -> PathBuf {
@@ -31,13 +33,13 @@ pub fn setup_svm_with_program() -> (LiteSVM, Keypair) {
     let mut svm = LiteSVM::new();
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000)
-        .expect("debería financiar la authority");
+        .expect("should fund the authority");
 
     let program_path = program_so_path();
     svm.add_program_from_file(PROGRAM_ID, &program_path)
         .unwrap_or_else(|e| {
             panic!(
-                "no se pudo cargar {}: {e}. Ejecuta `anchor build` o define {PROGRAM_SO_ENV} con la ruta al .so",
+                "could not load {}: {e}. Run `anchor build` or define {PROGRAM_SO_ENV} with the path to the .so file",
                 program_path.display()
             )
         });
@@ -53,14 +55,22 @@ pub fn set_sysvar_clock(svm: &mut LiteSVM, unix_timestamp: i64) {
 
 pub fn derive_workspace_pda(authority: &Pubkey, workspace_id: u64) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[WORKSPACE_SEED, authority.as_ref(), &workspace_id.to_le_bytes()],
+        &[
+            WORKSPACE_SEED,
+            authority.as_ref(),
+            &workspace_id.to_le_bytes(),
+        ],
         &PROGRAM_ID,
     )
 }
 
 pub fn derive_bounty_pda(workspace_key: &Pubkey, bounty_id: u64) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[BOUNTY_SEED, workspace_key.as_ref(), &bounty_id.to_le_bytes()],
+        &[
+            BOUNTY_SEED,
+            workspace_key.as_ref(),
+            &bounty_id.to_le_bytes(),
+        ],
         &PROGRAM_ID,
     )
 }
@@ -73,7 +83,7 @@ pub fn valid_params(workspace_id: u64) -> WorkspaceParams {
     WorkspaceParams {
         workspace_id,
         quorum_threshold: 2,
-        max_submission_atempts: 3,
+        max_submission_attempts: 3,
         challenge_window_secs: 3600,
         review_timeout_secs: 7200,
         fee_bps: 250,
@@ -88,7 +98,7 @@ pub fn send_instruction(
     signing_key: &Keypair,
     payer: &Pubkey,
 ) -> std::result::Result<(), String> {
-    // Cada transacción necesita un blockhash fresco para generar una firma única.
+    // Each transaction requires a fresh blockhash to generate a unique signature.
     svm.expire_blockhash();
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -349,35 +359,91 @@ pub fn send_reject_work_tx(
     send_instruction(svm, ix, reviewer, &reviewer.pubkey())
 }
 
+pub fn build_set_paused_ix(
+    authority: Pubkey,
+    workspace_pda: Pubkey,
+    is_paused: bool,
+) -> Instruction {
+    let accounts = kredowork::accounts::SetPaused {
+        workspace: workspace_pda,
+        authority,
+    }
+    .to_account_metas(None);
+
+    let data = kredowork::instruction::SetPaused { is_paused }.data();
+
+    Instruction {
+        program_id: PROGRAM_ID,
+        accounts,
+        data,
+    }
+}
+
+pub fn send_set_paused_tx(
+    svm: &mut LiteSVM,
+    authority: &Keypair,
+    ix: Instruction,
+) -> std::result::Result<(), String> {
+    send_instruction(svm, ix, authority, &authority.pubkey())
+}
+
+pub fn build_update_workspace_ix(
+    authority: Pubkey,
+    workspace_pda: Pubkey,
+    params: UpdateWorkspaceParams,
+) -> Instruction {
+    let accounts = kredowork::accounts::UpdateWorkspace {
+        workspace: workspace_pda,
+        authority,
+    }
+    .to_account_metas(None);
+
+    let data = kredowork::instruction::UpdateWorkspace { params }.data();
+
+    Instruction {
+        program_id: PROGRAM_ID,
+        accounts,
+        data,
+    }
+}
+
+pub fn send_update_workspace_tx(
+    svm: &mut LiteSVM,
+    authority: &Keypair,
+    ix: Instruction,
+) -> std::result::Result<(), String> {
+    send_instruction(svm, ix, authority, &authority.pubkey())
+}
+
 pub fn fetch_workspace(svm: &LiteSVM, address: &Pubkey) -> WorkspaceConfig {
-    let account = svm.get_account(address).expect("el workspace debe existir");
+    let account = svm.get_account(address).expect("the workspace must exist");
     let mut data_slice: &[u8] = &account.data;
-    WorkspaceConfig::try_deserialize(&mut data_slice)
-        .expect("WorkspaceConfig debe deserializarse")
+    WorkspaceConfig::try_deserialize(&mut data_slice).expect("WorkspaceConfig must be deserialized")
 }
 
 pub fn fetch_bounty(svm: &LiteSVM, address: &Pubkey) -> BountyAccount {
-    let account = svm.get_account(address).expect("el bounty debe existir");
+    let account = svm.get_account(address).expect("the bounty must exist");
     let mut data_slice: &[u8] = &account.data;
-    BountyAccount::try_deserialize(&mut data_slice)
-        .expect("BountyAccount debe deserializarse")
+    BountyAccount::try_deserialize(&mut data_slice).expect("BountyAccount must be deserialized")
 }
 
-/// LiteSVM retira de su base de datos las cuentas que no poseen lamports,
-/// por lo que un vault con saldo final de cero se reporta como `None`.
+/// LiteSVM removes accounts that hold no lamports from its database,
+/// consequently, a vault with a final balance of zero is reported as `None`.
 pub fn lamports(svm: &LiteSVM, address: &Pubkey) -> u64 {
     svm.get_balance(address).unwrap_or(0)
 }
 
 pub fn set_workspace_paused(svm: &mut LiteSVM, address: &Pubkey, paused: bool) {
-    let mut account = svm.get_account(address).expect("el workspace debe existir");
+    let mut account = svm.get_account(address).expect("the workspace must exist");
     let mut data_slice: &[u8] = &account.data;
     let mut workspace = WorkspaceConfig::try_deserialize(&mut data_slice)
-        .expect("WorkspaceConfig debe deserializarse");
+        .expect("WorkspaceConfig must be deserialized");
     workspace.is_paused = paused;
     let mut out: Vec<u8> = Vec::with_capacity(account.data.len());
-    workspace.try_serialize(&mut out).expect("debe serializarse el workspace");
+    workspace
+        .try_serialize(&mut out)
+        .expect("the workspace must be serialized");
     account.data = out;
     svm.set_account(*address, account)
-        .expect("debe persistirse el workspace pausado");
+        .expect("the paused workspace must be persisted");
 }

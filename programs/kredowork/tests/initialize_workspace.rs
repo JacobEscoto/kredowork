@@ -26,13 +26,13 @@ fn setup_svm_with_program() -> (LiteSVM, Keypair) {
     let mut svm = LiteSVM::new();
     let authority = Keypair::new();
     svm.airdrop(&authority.pubkey(), 10_000_000_000)
-        .expect("debería financiar la authority");
+        .expect("should fund authority");
 
     let program_path = program_so_path();
     svm.add_program_from_file(PROGRAM_ID, &program_path)
         .unwrap_or_else(|e| {
             panic!(
-                "no se pudo cargar {}: {e}. Ejecuta `anchor build` o define {PROGRAM_SO_ENV} con la ruta al .so",
+                "could not load {}: {e}. Run `anchor build` or define {PROGRAM_SO_ENV} with the path to the .so file",
                 program_path.display()
             )
         });
@@ -76,7 +76,7 @@ fn valid_params(workspace_id: u64) -> WorkspaceParams {
     WorkspaceParams {
         workspace_id,
         quorum_threshold: 2,
-        max_submission_atempts: 3,
+        max_submission_attempts: 3,
         challenge_window_secs: 3600,
         review_timeout_secs: 7200,
         fee_bps: 250,
@@ -168,7 +168,10 @@ fn initialize_workspace_fails_when_quorum_is_zero() {
     let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
         .expect_err("it should fail if quorum_threshold is 0");
 
-    assert!(err.contains("QuorumNotReached"), "unexpected error: {err}");
+    assert!(
+        err.contains("InvalidQuorumThreshold") || err.contains("QuorumNotReached"),
+        "unexpected error: {err}"
+    );
 }
 
 #[test]
@@ -184,7 +187,45 @@ fn initialize_workspace_fails_when_quorum_exceeds_reviewers() {
     let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
         .expect_err("it should fail if quorum_threshold > reviewers.len()");
 
-    assert!(err.contains("QuorumNotReached"), "unexpected error: {err}");
+    assert!(
+        err.contains("QuorumExceedsReviewers") || err.contains("QuorumNotReached"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn initialize_workspace_fails_when_max_attempts_zero() {
+    let (mut svm, authority) = setup_svm_with_program();
+    let workspace_id = 40_u64;
+    let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
+
+    let mut params = valid_params(workspace_id);
+    params.max_submission_attempts = 0;
+
+    let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
+        .expect_err("it should fail if max_submission_atempts is 0");
+
+    assert!(
+        err.contains("InvalidMaxSubmissionAttempts") || err.contains("InvalidStateTransition"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn initialize_workspace_fails_when_duplicate_reviewers() {
+    let (mut svm, authority) = setup_svm_with_program();
+    let workspace_id = 41_u64;
+    let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
+
+    let reviewer = Pubkey::new_unique();
+    let mut params = valid_params(workspace_id);
+    params.reviewers = vec![reviewer, reviewer];
+    params.quorum_threshold = 2;
+
+    let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
+        .expect_err("it should fail if duplicate reviewers are provided");
+
+    assert!(err.contains("DuplicateReviewer"), "unexpected error: {err}");
 }
 
 #[test]
@@ -199,7 +240,8 @@ fn initialize_workspace_fails_when_windows_not_positive() {
     let err_challenge = send_init_tx(&mut svm, &authority, pda_challenge, params_challenge)
         .expect_err("it should fail with challenge_window_secs <= 0");
     assert!(
-        err_challenge.contains("InvalidDeadline"),
+        err_challenge.contains("InvalidWindowDuration")
+            || err_challenge.contains("InvalidDeadline"),
         "unexpected error: {err_challenge}"
     );
 
@@ -211,7 +253,7 @@ fn initialize_workspace_fails_when_windows_not_positive() {
     let err_review = send_init_tx(&mut svm, &authority, pda_review, params_review)
         .expect_err("it should fail with review_timeout_secs <= 0");
     assert!(
-        err_review.contains("InvalidDeadline"),
+        err_review.contains("InvalidWindowDuration") || err_review.contains("InvalidDeadline"),
         "unexpected error: {err_review}"
     );
 }

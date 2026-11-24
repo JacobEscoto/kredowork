@@ -23,7 +23,7 @@ fn setup_open_bounty(
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(svm, authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -36,7 +36,7 @@ fn setup_open_bounty(
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(svm, sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(svm, sponsor, ix).expect("bounty should be created");
 
     (workspace_pda, bounty_pda, vault_pda, 0)
 }
@@ -48,7 +48,7 @@ fn reclaim_expired_open_bounty_refunds_sponsor() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 601);
@@ -67,21 +67,21 @@ fn reclaim_expired_open_bounty_refunds_sponsor() {
         bounty_id,
     );
     send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect("el reclaim debe ejecutarse");
+        .expect("reclaim should succeed");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
-    assert!(bounty.status == BountyStatus::Expired, "estado debe ser Expired");
-    assert_eq!(bounty.reward_amount, 0, "reward_amount debe quedar 0");
+    assert!(bounty.status == BountyStatus::Expired, "status should be Expired");
+    assert_eq!(bounty.reward_amount, 0, "reward_amount should be 0");
     assert_eq!(bounty.window_ends_at_ts, None);
 
     // Vault drained.
-    assert_eq!(lamports(&svm, &vault_pda), 0, "vault debe quedar vacío");
+    assert_eq!(lamports(&svm, &vault_pda), 0, "vault should be empty");
 
     // Sponsor gets refund; authority paid the tx fee.
     assert_eq!(
         lamports(&svm, &sponsor.pubkey()),
         sponsor_before + 1_000_000_000,
-        "sponsor debe recibir el reembolso completo"
+        "sponsor should receive full refund"
     );
 }
 
@@ -92,18 +92,18 @@ fn reclaim_expired_claimed_bounty_refunds_sponsor() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 602);
 
-    // Contributor submits → status = Submitted (Claimed-equivalent).
+    // Contributor submits → status = Submitted.
     let ix = build_submit_work_ix(
         contributor.pubkey(), workspace_pda, bounty_pda, bounty_id, [1u8; 32],
     );
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("submit work");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     // Advance past deadline.
     set_sysvar_clock(&mut svm, DEADLINE_UNIX_TIMESTAMP + 1);
@@ -117,10 +117,8 @@ fn reclaim_expired_claimed_bounty_refunds_sponsor() {
         bounty_id,
     );
     // reclaim_expired only allows Open | Claimed, not Submitted; document behavior.
-    // The current on-chain logic is `Open | Claimed` → Submitted is NOT accepted.
     let result = send_instruction(&mut svm, ix, &authority, &authority.pubkey());
-    // This should fail: Submitted is NOT in the accepted set.
-    let err = result.expect_err("debe fallar: Submitted no es Open|Claimed");
+    let err = result.expect_err("should fail: Submitted is not Open or Claimed");
     let err_msg = &err;
     assert!(
         err_msg.contains("InvalidStateTransition") || err_msg.contains("6003"),
@@ -135,7 +133,7 @@ fn reclaim_expired_fails_before_deadline() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 603);
@@ -150,7 +148,7 @@ fn reclaim_expired_fails_before_deadline() {
         bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si el deadline aún no pasó");
+        .expect_err("should fail before deadline");
 
     let err_msg = &err;
     assert!(
@@ -166,7 +164,7 @@ fn reclaim_expired_fails_at_exact_deadline() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 604);
@@ -183,7 +181,7 @@ fn reclaim_expired_fails_at_exact_deadline() {
         bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar exactamente al deadline (se requiere clock > deadline)");
+        .expect_err("should fail exactly at deadline (requires clock > deadline)");
 
     let err_msg = &err;
     assert!(
@@ -199,7 +197,7 @@ fn reclaim_expired_fails_when_already_cancelled() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 605);
@@ -208,7 +206,7 @@ fn reclaim_expired_fails_when_already_cancelled() {
     let ix = build_cancel_bounty_ix(
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
-    send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey()).expect("cancel debe ejecutarse");
+    send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey()).expect("cancellation should succeed");
 
     // Now advance past deadline and try to reclaim.
     set_sysvar_clock(&mut svm, DEADLINE_UNIX_TIMESTAMP + 1);
@@ -222,7 +220,7 @@ fn reclaim_expired_fails_when_already_cancelled() {
         bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("no se puede reclamar un bounty Cancelled");
+        .expect_err("cannot reclaim a Cancelled bounty");
 
     let err_msg = &err;
     assert!(
@@ -238,7 +236,7 @@ fn reclaim_expired_fails_when_workspace_paused() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 606);
@@ -255,7 +253,7 @@ fn reclaim_expired_fails_when_workspace_paused() {
         bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(

@@ -9,24 +9,32 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
         params.reviewers.len() <= MAX_REVIEWERS,
         BountyError::TooManyReviewers
     );
-    require!(params.quorum_threshold > 0, BountyError::QuorumNotReached);
-    require!(params.max_submission_atempts > 0, BountyError::InvalidStateTransition);
+    require!(params.quorum_threshold > 0, BountyError::InvalidQuorumThreshold);
+    require!(params.max_submission_attempts > 0, BountyError::InvalidMaxSubmissionAttempts);
     require!(
         usize::from(params.quorum_threshold) <= params.reviewers.len(),
-        BountyError::QuorumNotReached
+        BountyError::QuorumExceedsReviewers
     );
+
+    for (i, reviewer) in params.reviewers.iter().enumerate() {
+        require!(
+            !params.reviewers[i + 1..].contains(reviewer),
+            BountyError::DuplicateReviewer
+        );
+    }
+
     require!(
         params.challenge_window_secs > 0,
-        BountyError::InvalidDeadline
+        BountyError::InvalidWindowDuration
     );
-    require!(params.review_timeout_secs > 0, BountyError::InvalidDeadline);
+    require!(params.review_timeout_secs > 0, BountyError::InvalidWindowDuration);
 
     let workspace = &mut ctx.accounts.workspace;
     workspace.authority = ctx.accounts.authority.key();
     workspace.workspace_id = params.workspace_id;
     workspace.bounty_count = 0;
     workspace.quorum_threshold = params.quorum_threshold;
-    workspace.max_submission_attempts = params.max_submission_atempts;
+    workspace.max_submission_attempts = params.max_submission_attempts;
     workspace.challenge_window_secs = params.challenge_window_secs;
     workspace.review_timeout_secs = params.review_timeout_secs;
     workspace.fee_bps = params.fee_bps;
@@ -42,7 +50,7 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
 pub struct WorkspaceParams {
     pub workspace_id: u64,
     pub quorum_threshold: u8,
-    pub max_submission_atempts: u8,
+    pub max_submission_attempts: u8,
     pub challenge_window_secs: i64,
     pub review_timeout_secs: i64,
     pub fee_bps: u16,

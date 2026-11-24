@@ -19,10 +19,7 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
         .ok_or(BountyError::UnauthorizedReviewer)?;
 
     let bounty = &mut ctx.accounts.bounty;
-    require!(
-        bounty.bounty_id == bounty_id,
-        BountyError::InvalidStateTransition
-    );
+    require!(bounty.bounty_id == bounty_id, BountyError::BountyIdMismatch);
     require!(
         bounty.status == BountyStatus::Submitted,
         BountyError::InvalidStateTransition
@@ -37,13 +34,19 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
     }
 
     // Reset submission state so a new contributor can try.
+    let clock = Clock::get()?;
     bounty.status = BountyStatus::Rejected;
     bounty.claimant = None;
     bounty.delivery_hash = None;
     bounty.submitted_at_ts = None;
     bounty.approvals_count = 0;
     bounty.approvals_mask = 0;
-    bounty.window_ends_at_ts = None;
+    bounty.window_ends_at_ts = Some(
+        clock
+            .unix_timestamp
+            .checked_add(workspace.challenge_window_secs)
+            .ok_or(BountyError::MathOverflow)?,
+    );
 
     Ok(())
 }

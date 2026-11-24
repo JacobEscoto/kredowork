@@ -22,10 +22,10 @@ fn create_bounty_happy_path() {
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let bounty_id: u64 = 0;
     let (bounty_pda, bounty_bump) = derive_bounty_pda(&workspace_pda, bounty_id);
@@ -42,7 +42,7 @@ fn create_bounty_happy_path() {
         SPEC_HASH,
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
 
     let sponsor_balance_after = svm.get_balance(&sponsor.pubkey()).expect("sponsor funded");
     let bounty_rent = svm.get_balance(&bounty_pda).expect("bounty funded with rent");
@@ -82,10 +82,10 @@ fn create_bounty_fails_when_reward_amount_is_zero() {
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -100,7 +100,7 @@ fn create_bounty_fails_when_reward_amount_is_zero() {
         DEADLINE_UNIX_TIMESTAMP,
     );
     let err = send_create_bounty_tx(&mut svm, &sponsor, ix)
-        .expect_err("debe fallar si el reward_amount es cero");
+        .expect_err("should fail when reward_amount is zero");
 
     let err_msg = &err;
     assert!(
@@ -119,14 +119,15 @@ fn create_bounty_fails_when_deadline_is_in_the_past() {
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
 
+    let past_deadline = CLOCK_UNIX_TIMESTAMP - 1;
     let ix = build_create_bounty_ix(
         sponsor.pubkey(),
         workspace_pda,
@@ -134,10 +135,10 @@ fn create_bounty_fails_when_deadline_is_in_the_past() {
         vault_pda,
         REWARD_AMOUNT,
         SPEC_HASH,
-        CLOCK_UNIX_TIMESTAMP - 100,
+        past_deadline,
     );
     let err = send_create_bounty_tx(&mut svm, &sponsor, ix)
-        .expect_err("debe fallar si el deadline está en el pasado");
+        .expect_err("should fail when deadline is in the past");
 
     let err_msg = &err;
     assert!(
@@ -156,17 +157,15 @@ fn create_bounty_fails_when_workspace_is_paused() {
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
-    set_workspace_paused(&mut svm, &workspace_pda, true);
-
-    let paused_workspace = fetch_workspace(&svm, &workspace_pda);
-    eprintln!("paused flag after set: {}", paused_workspace.is_paused);
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
+
+    set_workspace_paused(&mut svm, &workspace_pda, true);
 
     let ix = build_create_bounty_ix(
         sponsor.pubkey(),
@@ -178,7 +177,7 @@ fn create_bounty_fails_when_workspace_is_paused() {
         DEADLINE_UNIX_TIMESTAMP,
     );
     let err = send_create_bounty_tx(&mut svm, &sponsor, ix)
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(

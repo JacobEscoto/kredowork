@@ -9,13 +9,13 @@ pub fn handler(ctx: Context<SubmitWork>, bounty_id: u64, delivery_hash: [u8; 32]
 
     let clock = Clock::get()?;
     let bounty = &mut ctx.accounts.bounty;
-    require!(
-        bounty.bounty_id == bounty_id,
-        BountyError::InvalidStateTransition
-    );
+    require!(bounty.bounty_id == bounty_id, BountyError::BountyIdMismatch);
 
     require!(
-        matches!(bounty.status, BountyStatus::Open | BountyStatus::Claimed),
+        matches!(
+            bounty.status,
+            BountyStatus::Open | BountyStatus::Claimed | BountyStatus::Rejected
+        ),
         BountyError::InvalidStateTransition
     );
 
@@ -29,6 +29,8 @@ pub fn handler(ctx: Context<SubmitWork>, bounty_id: u64, delivery_hash: [u8; 32]
     bounty.status = BountyStatus::Submitted;
     bounty.submitted_at_ts = Some(clock.unix_timestamp);
     bounty.approvals_count = 0;
+    bounty.approvals_mask = 0;
+    bounty.window_ends_at_ts = None;
 
     Ok(())
 }

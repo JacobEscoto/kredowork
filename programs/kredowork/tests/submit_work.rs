@@ -26,7 +26,7 @@ fn setup_open_bounty(
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(svm, authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -40,7 +40,7 @@ fn setup_open_bounty(
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(svm, sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(svm, sponsor, ix).expect("bounty should be created");
 
     (workspace_pda, bounty_pda, vault_pda, 0)
 }
@@ -52,14 +52,14 @@ fn submit_work_happy_path() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, _vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor);
 
     let contributor = Keypair::new();
     svm.airdrop(&contributor.pubkey(), 10_000_000_000)
-        .expect("debe financiar el contributor");
+        .expect("should fund contributor");
 
     let ix = build_submit_work_ix(
         contributor.pubkey(),
@@ -68,7 +68,7 @@ fn submit_work_happy_path() {
         bounty_id,
         DELIVERY_HASH,
     );
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("el work debe enviarse");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert_eq!(bounty.bounty_id, bounty_id);
@@ -87,14 +87,14 @@ fn submit_work_fails_after_deadline() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, _vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor);
 
     let contributor = Keypair::new();
     svm.airdrop(&contributor.pubkey(), 10_000_000_000)
-        .expect("debe financiar el contributor");
+        .expect("should fund contributor");
 
     // Advance clock past deadline.
     set_sysvar_clock(&mut svm, DEADLINE_UNIX_TIMESTAMP + 1);
@@ -107,7 +107,7 @@ fn submit_work_fails_after_deadline() {
         DELIVERY_HASH,
     );
     let err = send_submit_work_tx(&mut svm, &contributor, ix)
-        .expect_err("debe fallar si se envía work después del deadline");
+        .expect_err("should fail if work is submitted after deadline");
 
     let err_msg = &err;
     assert!(
@@ -123,14 +123,14 @@ fn submit_work_fails_when_already_submitted() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, _vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor);
 
     let contributor = Keypair::new();
     svm.airdrop(&contributor.pubkey(), 10_000_000_000)
-        .expect("debe financiar el contributor");
+        .expect("should fund contributor");
 
     // First submission succeeds → status becomes Submitted.
     let ix = build_submit_work_ix(
@@ -140,7 +140,7 @@ fn submit_work_fails_when_already_submitted() {
         bounty_id,
         DELIVERY_HASH,
     );
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("el work debe enviarse");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     // Second submission must fail: status is Submitted, not Open/Claimed.
     let ix2 = build_submit_work_ix(
@@ -151,7 +151,7 @@ fn submit_work_fails_when_already_submitted() {
         DELIVERY_HASH_2,
     );
     let err = send_submit_work_tx(&mut svm, &contributor, ix2)
-        .expect_err("debe fallar si el bounty no está en Open o Claimed");
+        .expect_err("should fail if bounty is not in Open or Claimed");
 
     let err_msg = &err;
     assert!(
@@ -167,7 +167,7 @@ fn submit_work_fails_when_bounty_is_cancelled() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor);
@@ -181,12 +181,12 @@ fn submit_work_fails_when_bounty_is_cancelled() {
         bounty_id,
     );
     send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect("el cancel debe ejecutarse");
+        .expect("cancellation should succeed");
 
     // Now try to submit work – should fail.
     let contributor = Keypair::new();
     svm.airdrop(&contributor.pubkey(), 10_000_000_000)
-        .expect("debe financiar el contributor");
+        .expect("should fund contributor");
 
     let ix2 = build_submit_work_ix(
         contributor.pubkey(),
@@ -196,7 +196,7 @@ fn submit_work_fails_when_bounty_is_cancelled() {
         DELIVERY_HASH,
     );
     let err = send_submit_work_tx(&mut svm, &contributor, ix2)
-        .expect_err("debe fallar si el bounty está Cancelled");
+        .expect_err("should fail if bounty is Cancelled");
 
     let err_msg = &err;
     assert!(
@@ -212,7 +212,7 @@ fn submit_work_fails_when_workspace_paused() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, _vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor);
@@ -222,7 +222,7 @@ fn submit_work_fails_when_workspace_paused() {
 
     let contributor = Keypair::new();
     svm.airdrop(&contributor.pubkey(), 10_000_000_000)
-        .expect("debe financiar el contributor");
+        .expect("should fund contributor");
 
     let ix = build_submit_work_ix(
         contributor.pubkey(),
@@ -232,7 +232,7 @@ fn submit_work_fails_when_workspace_paused() {
         DELIVERY_HASH,
     );
     let err = send_submit_work_tx(&mut svm, &contributor, ix)
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(
@@ -248,17 +248,17 @@ fn submit_work_succeeds_after_rejection() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     // Use workspace with reviewers that we control.
     let workspace_id = 202_u64;
     let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
     let reviewer = Keypair::new();
-    svm.airdrop(&reviewer.pubkey(), 10_000_000_000).expect("debe financiar el reviewer");
+    svm.airdrop(&reviewer.pubkey(), 10_000_000_000).expect("should fund reviewer");
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![reviewer.pubkey(), Pubkey::new_unique()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -271,11 +271,11 @@ fn submit_work_succeeds_after_rejection() {
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
 
     let contributor1 = Keypair::new();
     svm.airdrop(&contributor1.pubkey(), 10_000_000_000)
-        .expect("debe financiar contributor1");
+        .expect("should fund contributor1");
 
     // Contributor1 submits.
     let ix = build_submit_work_ix(
@@ -285,11 +285,11 @@ fn submit_work_succeeds_after_rejection() {
         0,
         DELIVERY_HASH,
     );
-    send_submit_work_tx(&mut svm, &contributor1, ix).expect("first submit debe enviarse");
+    send_submit_work_tx(&mut svm, &contributor1, ix).expect("first submit should succeed");
 
     // Reviewer rejects → bounty returns to Rejected (claimant cleared).
     let ix = build_reject_work_ix(reviewer.pubkey(), workspace_pda, bounty_pda, 0);
-    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject debe ejecutarse");
+    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject should succeed");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert!(bounty.status == BountyStatus::Rejected);
@@ -302,7 +302,7 @@ fn submit_work_succeeds_after_rejection() {
     // rejected bounties need a manual reset or a re-open flow.
     let contributor2 = Keypair::new();
     svm.airdrop(&contributor2.pubkey(), 10_000_000_000)
-        .expect("debe financiar contributor2");
+        .expect("should fund contributor2");
 
     let ix2 = build_submit_work_ix(
         contributor2.pubkey(),

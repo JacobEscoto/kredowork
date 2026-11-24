@@ -29,10 +29,10 @@ fn setup_submitted_bounty_with_reviewers(
     params.reviewers = reviewers;
     params.quorum_threshold = 2;
     send_initialize_workspace_tx(svm, authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
     let ix = build_create_bounty_ix(
@@ -44,11 +44,11 @@ fn setup_submitted_bounty_with_reviewers(
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(svm, &sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(svm, &sponsor, ix).expect("bounty should be created");
 
     let ix =
         build_submit_work_ix(contributor.pubkey(), workspace_pda, bounty_pda, 0, DELIVERY_HASH);
-    send_submit_work_tx(svm, contributor, ix).expect("el work debe enviarse");
+    send_submit_work_tx(svm, contributor, ix).expect("work should be submitted");
 
     (workspace_pda, bounty_pda, 0)
 }
@@ -72,11 +72,11 @@ fn approve_work_partial_quorum() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("debe financiar reviewer1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("debe financiar reviewer2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("debe financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -88,7 +88,7 @@ fn approve_work_partial_quorum() {
 
     // Only reviewer1 approves → quorum (2) not reached.
     approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, bounty_id)
-        .expect("el primer revisor debe aprobar");
+        .expect("first reviewer should approve");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert_eq!(bounty.approvals_count, 1);
@@ -106,11 +106,11 @@ fn approve_work_reaches_quorum() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("debe financiar reviewer1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("debe financiar reviewer2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("debe financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -121,9 +121,9 @@ fn approve_work_reaches_quorum() {
     );
 
     approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, bounty_id)
-        .expect("el primer revisor debe aprobar");
+        .expect("first reviewer should approve");
     approve_with(&mut svm, &reviewer2, workspace_pda, bounty_pda, bounty_id)
-        .expect("el segundo revisor debe aprobar");
+        .expect("second reviewer should approve");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert_eq!(bounty.approvals_count, 2);
@@ -147,13 +147,13 @@ fn approve_work_bitmask_non_contiguous() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer0 = Keypair::new();
-    svm.airdrop(&reviewer0.pubkey(), 10_000_000_000).expect("financiar r0");
+    svm.airdrop(&reviewer0.pubkey(), 10_000_000_000).expect("should fund reviewer0");
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     // Quorum = 2 out of 3 reviewers.
     let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), 303);
@@ -161,10 +161,10 @@ fn approve_work_bitmask_non_contiguous() {
     params.reviewers = vec![reviewer0.pubkey(), reviewer1.pubkey(), reviewer2.pubkey()];
     params.quorum_threshold = 2;
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("workspace init");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
     let ix = build_create_bounty_ix(
@@ -176,13 +176,13 @@ fn approve_work_bitmask_non_contiguous() {
         [1u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty create");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
     let ix = build_submit_work_ix(contributor.pubkey(), workspace_pda, bounty_pda, 0, [2u8; 32]);
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("submit work");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     // reviewer0 (bit 0) and reviewer2 (bit 2) approve; reviewer1 (bit 1) does not.
-    approve_with(&mut svm, &reviewer0, workspace_pda, bounty_pda, 0).expect("r0 aprueba");
-    approve_with(&mut svm, &reviewer2, workspace_pda, bounty_pda, 0).expect("r2 aprueba");
+    approve_with(&mut svm, &reviewer0, workspace_pda, bounty_pda, 0).expect("reviewer0 should approve");
+    approve_with(&mut svm, &reviewer2, workspace_pda, bounty_pda, 0).expect("reviewer2 should approve");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert_eq!(bounty.approvals_count, 2);
@@ -201,13 +201,13 @@ fn approve_work_fails_for_unauthorized_reviewer() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let unauthorized = Keypair::new();
-    svm.airdrop(&unauthorized.pubkey(), 10_000_000_000).expect("financiar unauthorized");
+    svm.airdrop(&unauthorized.pubkey(), 10_000_000_000).expect("should fund unauthorized");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -218,7 +218,7 @@ fn approve_work_fails_for_unauthorized_reviewer() {
     );
 
     let err = approve_with(&mut svm, &unauthorized, workspace_pda, bounty_pda, bounty_id)
-        .expect_err("solo reviewers autorizados pueden aprobar");
+        .expect_err("only authorized reviewers should be able to approve");
 
     let err_msg = &err;
     assert!(
@@ -235,9 +235,9 @@ fn approve_work_fails_on_duplicate_action() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -248,10 +248,10 @@ fn approve_work_fails_on_duplicate_action() {
     );
 
     approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, bounty_id)
-        .expect("primera aprobación debe pasar");
+        .expect("first approval should succeed");
 
     let err = approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, bounty_id)
-        .expect_err("el mismo revisor no puede aprobar dos veces");
+        .expect_err("same reviewer cannot approve twice");
 
     let err_msg = &err;
     assert!(
@@ -269,9 +269,9 @@ fn approve_work_fails_for_self_approval() {
 
     // The contributor is also listed as a reviewer.
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
     let other_reviewer = Keypair::new();
-    svm.airdrop(&other_reviewer.pubkey(), 10_000_000_000).expect("financiar other_reviewer");
+    svm.airdrop(&other_reviewer.pubkey(), 10_000_000_000).expect("should fund other_reviewer");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -282,7 +282,7 @@ fn approve_work_fails_for_self_approval() {
     );
 
     let err = approve_with(&mut svm, &contributor, workspace_pda, bounty_pda, bounty_id)
-        .expect_err("el contributor no puede auto-aprobar");
+        .expect_err("contributor cannot self-approve");
 
     let err_msg = &err;
     assert!(
@@ -299,9 +299,9 @@ fn approve_work_fails_when_not_submitted() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
 
     // Create Open bounty (not submitted yet).
     let workspace_id = 307_u64;
@@ -309,10 +309,10 @@ fn approve_work_fails_when_not_submitted() {
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![reviewer1.pubkey(), reviewer2.pubkey()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("workspace init");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
     let ix = build_create_bounty_ix(
@@ -324,11 +324,11 @@ fn approve_work_fails_when_not_submitted() {
         [3u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty create");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
     // Bounty is Open, never submitted.
 
     let err = approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, 0)
-        .expect_err("no se puede aprobar un bounty Open");
+        .expect_err("cannot approve an Open bounty");
 
     let err_msg = &err;
     assert!(
@@ -345,11 +345,11 @@ fn approve_work_fails_when_workspace_paused() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, bounty_id) = setup_submitted_bounty_with_reviewers(
         &mut svm,
@@ -362,7 +362,7 @@ fn approve_work_fails_when_workspace_paused() {
     set_workspace_paused(&mut svm, &workspace_pda, true);
 
     let err = approve_with(&mut svm, &reviewer1, workspace_pda, bounty_pda, bounty_id)
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(

@@ -43,4 +43,25 @@ pub enum BountyError {
 
     #[msg("Arithmetic overflow in the calculation of funds or score")]
     MathOverflow,
+
+    #[msg("Duplicate reviewer detected in the reviewer list.")]
+    DuplicateReviewer,
+
+    #[msg("The quorum threshold must be greater than zero.")]
+    InvalidQuorumThreshold,
+
+    #[msg("The quorum threshold cannot exceed the number of reviewers.")]
+    QuorumExceedsReviewers,
+
+    #[msg("The maximum submission attempts must be greater than zero.")]
+    InvalidMaxSubmissionAttempts,
+
+    #[msg("The window duration must be greater than zero.")]
+    InvalidWindowDuration,
+
+    #[msg("The provided contributor does not match the bounty claimant.")]
+    InvalidClaimant,
+
+    #[msg("The provided bounty ID does not match the account bounty ID.")]
+    BountyIdMismatch,
 }

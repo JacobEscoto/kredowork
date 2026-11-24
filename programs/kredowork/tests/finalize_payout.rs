@@ -23,17 +23,17 @@ fn setup_preapproved_bounty(
     contributor: &Keypair,
 ) -> (Pubkey, Pubkey, Pubkey, u64) {
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
 
     let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![reviewer1.pubkey(), reviewer2.pubkey()];
-    send_initialize_workspace_tx(svm, authority, workspace_pda, params).expect("workspace init");
+    send_initialize_workspace_tx(svm, authority, workspace_pda, params).expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
     let ix = build_create_bounty_ix(
@@ -45,15 +45,15 @@ fn setup_preapproved_bounty(
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(svm, &sponsor, ix).expect("bounty create");
+    send_create_bounty_tx(svm, &sponsor, ix).expect("bounty should be created");
 
     let ix = build_submit_work_ix(contributor.pubkey(), workspace_pda, bounty_pda, 0, DELIVERY_HASH);
-    send_submit_work_tx(svm, contributor, ix).expect("submit work");
+    send_submit_work_tx(svm, contributor, ix).expect("work should be submitted");
 
     let ix = build_approve_work_ix(reviewer1.pubkey(), workspace_pda, bounty_pda, 0);
-    send_approve_work_tx(svm, &reviewer1, ix).expect("r1 approve");
+    send_approve_work_tx(svm, &reviewer1, ix).expect("reviewer1 should approve");
     let ix = build_approve_work_ix(reviewer2.pubkey(), workspace_pda, bounty_pda, 0);
-    send_approve_work_tx(svm, &reviewer2, ix).expect("r2 approve");
+    send_approve_work_tx(svm, &reviewer2, ix).expect("reviewer2 should approve");
 
     (workspace_pda, bounty_pda, vault_pda, 0)
 }
@@ -65,14 +65,14 @@ fn finalize_payout_happy_path() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_preapproved_bounty(&mut svm, &authority, 401, &contributor);
 
     // Advance clock to >= window_ends_at_ts (CLOCK_UNIX_TIMESTAMP + 3600).
     let bounty = fetch_bounty(&svm, &bounty_pda);
-    let window_ends = bounty.window_ends_at_ts.expect("debe existir la window");
+    let window_ends = bounty.window_ends_at_ts.expect("challenge window must exist");
     set_sysvar_clock(&mut svm, window_ends);
 
     let contributor_before = lamports(&svm, &contributor.pubkey());
@@ -88,33 +88,32 @@ fn finalize_payout_happy_path() {
         bounty_id,
     );
     send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect("el payout debe ejecutarse");
+        .expect("payout should succeed");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
-    assert!(bounty.status == BountyStatus::Completed, "estado debe ser Completed");
-    assert_eq!(bounty.reward_amount, 0, "reward_amount debe quedar 0");
+    assert!(bounty.status == BountyStatus::Completed, "status should be Completed");
+    assert_eq!(bounty.reward_amount, 0, "reward_amount should be 0");
     assert_eq!(bounty.window_ends_at_ts, None);
 
     let fee_amount = REWARD_AMOUNT * u64::from(FEE_BPS) / 10_000;
     let payout_amount = REWARD_AMOUNT - fee_amount;
 
     // Vault must be drained.
-    assert_eq!(lamports(&svm, &vault_pda), 0, "vault debe quedar vacío");
+    assert_eq!(lamports(&svm, &vault_pda), 0, "vault should be empty");
 
     // Contributor receives net payout.
     assert_eq!(
         lamports(&svm, &contributor.pubkey()),
         contributor_before + payout_amount,
-        "contributor debe recibir payout_amount"
+        "contributor should receive payout_amount"
     );
 
     // Authority (fee_recipient) receives the fee minus tx fee paid.
     let authority_after = lamports(&svm, &authority.pubkey());
-    // authority paid the tx fee but received fee_amount.
     assert_eq!(
         authority_after,
         authority_before + fee_amount - LITESVM_TX_FEE,
-        "authority debe recibir fee_amount neto de tx_fee"
+        "authority should receive fee_amount net of tx_fee"
     );
 }
 
@@ -126,11 +125,11 @@ fn finalize_payout_zero_fee() {
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
 
     let reviewer1 = Keypair::new();
-    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("financiar r1");
+    svm.airdrop(&reviewer1.pubkey(), 10_000_000_000).expect("should fund reviewer1");
     let reviewer2 = Keypair::new();
-    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("financiar r2");
+    svm.airdrop(&reviewer2.pubkey(), 10_000_000_000).expect("should fund reviewer2");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let workspace_id = 402_u64;
     let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
@@ -138,25 +137,25 @@ fn finalize_payout_zero_fee() {
     params.fee_bps = 0;
     params.reviewers = vec![reviewer1.pubkey(), reviewer2.pubkey()];
     send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
-        .expect("workspace init");
+        .expect("workspace should be initialized");
 
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
     let ix = build_create_bounty_ix(
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda,
         REWARD_AMOUNT, [9u8; 32], DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty create");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
 
     let ix = build_submit_work_ix(contributor.pubkey(), workspace_pda, bounty_pda, 0, DELIVERY_HASH);
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("submit work");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     let ix = build_approve_work_ix(reviewer1.pubkey(), workspace_pda, bounty_pda, 0);
-    send_approve_work_tx(&mut svm, &reviewer1, ix).expect("r1 approve");
+    send_approve_work_tx(&mut svm, &reviewer1, ix).expect("reviewer1 should approve");
     let ix = build_approve_work_ix(reviewer2.pubkey(), workspace_pda, bounty_pda, 0);
-    send_approve_work_tx(&mut svm, &reviewer2, ix).expect("r2 approve");
+    send_approve_work_tx(&mut svm, &reviewer2, ix).expect("reviewer2 should approve");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
     let window_ends = bounty.window_ends_at_ts.unwrap();
@@ -168,7 +167,7 @@ fn finalize_payout_zero_fee() {
         authority.pubkey(), workspace_pda, bounty_pda, vault_pda,
         contributor.pubkey(), authority.pubkey(), 0,
     );
-    send_instruction(&mut svm, ix, &authority, &authority.pubkey()).expect("payout ejecutado");
+    send_instruction(&mut svm, ix, &authority, &authority.pubkey()).expect("payout should succeed");
 
     // With fee_bps = 0 contributor should receive full REWARD_AMOUNT.
     assert_eq!(
@@ -185,7 +184,7 @@ fn finalize_payout_fails_before_window_expires() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_preapproved_bounty(&mut svm, &authority, 403, &contributor);
@@ -196,7 +195,7 @@ fn finalize_payout_fails_before_window_expires() {
         contributor.pubkey(), authority.pubkey(), bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si la window no venció");
+        .expect_err("should fail before window expires");
 
     let err_msg = &err;
     assert!(
@@ -212,15 +211,15 @@ fn finalize_payout_fails_when_bounty_not_preapproved() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let workspace_id = 404_u64;
     let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
-    send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params).expect("workspace init");
+    send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params).expect("workspace should be initialized");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -228,7 +227,7 @@ fn finalize_payout_fails_when_bounty_not_preapproved() {
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda,
         REWARD_AMOUNT, [9u8; 32], DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty create");
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
     // Bounty is Open (not submitted, not approved).
 
     let ix = build_finalize_payout_ix(
@@ -236,7 +235,7 @@ fn finalize_payout_fails_when_bounty_not_preapproved() {
         contributor.pubkey(), authority.pubkey(), 0,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si el bounty no está en PreApproved");
+        .expect_err("should fail when bounty is not PreApproved");
 
     let err_msg = &err;
     assert!(
@@ -252,9 +251,9 @@ fn finalize_payout_fails_for_wrong_contributor() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
     let impostor = Keypair::new();
-    svm.airdrop(&impostor.pubkey(), 10_000_000_000).expect("financiar impostor");
+    svm.airdrop(&impostor.pubkey(), 10_000_000_000).expect("should fund impostor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_preapproved_bounty(&mut svm, &authority, 405, &contributor);
@@ -269,11 +268,12 @@ fn finalize_payout_fails_for_wrong_contributor() {
         impostor.pubkey(), authority.pubkey(), bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si el contributor no es el claimant");
+        .expect_err("should fail when contributor is not the claimant");
 
     let err_msg = &err;
     assert!(
-        err_msg.contains("SelfApprovalNotAllowed")
+        err_msg.contains("InvalidClaimant")
+            || err_msg.contains("SelfApprovalNotAllowed")
             || err_msg.contains("6007")
             || err_msg.contains("ConstraintAddress")
             || err_msg.contains("2006"),
@@ -288,7 +288,7 @@ fn finalize_payout_fails_when_workspace_paused() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_preapproved_bounty(&mut svm, &authority, 406, &contributor);
@@ -304,7 +304,7 @@ fn finalize_payout_fails_when_workspace_paused() {
         contributor.pubkey(), authority.pubkey(), bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &authority, &authority.pubkey())
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(

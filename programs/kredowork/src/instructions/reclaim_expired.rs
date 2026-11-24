@@ -11,7 +11,7 @@ pub fn handler(ctx: Context<ReclaimExpired>, bounty_id: u64) -> Result<()> {
     let bounty = &mut ctx.accounts.bounty;
     require!(
         bounty.bounty_id == bounty_id,
-        BountyError::InvalidStateTransition
+        BountyError::BountyIdMismatch
     );
     require!(
         matches!(bounty.status, BountyStatus::Open | BountyStatus::Claimed),

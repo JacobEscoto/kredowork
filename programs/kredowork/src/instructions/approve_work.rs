@@ -8,7 +8,7 @@ pub fn handler(ctx: Context<ApproveWork>, bounty_id: u64) -> Result<()> {
     require!(!workspace.is_paused, BountyError::WorkspacePaused);
     require!(
         workspace.quorum_threshold > 0,
-        BountyError::QuorumNotReached
+        BountyError::InvalidQuorumThreshold
     );
 
     let reviewer_key = ctx.accounts.reviewer.key();
@@ -23,7 +23,7 @@ pub fn handler(ctx: Context<ApproveWork>, bounty_id: u64) -> Result<()> {
     let bounty = &mut ctx.accounts.bounty;
     require!(
         bounty.bounty_id == bounty_id,
-        BountyError::InvalidStateTransition
+        BountyError::BountyIdMismatch
     );
     require!(
         bounty.status == BountyStatus::Submitted,

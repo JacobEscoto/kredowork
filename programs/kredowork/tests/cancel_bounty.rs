@@ -23,7 +23,7 @@ fn setup_open_bounty(
     let mut params = valid_params(workspace_id);
     params.reviewers = vec![Pubkey::new_unique(), Pubkey::new_unique()];
     send_initialize_workspace_tx(svm, authority, workspace_pda, params)
-        .expect("el workspace debe inicializarse");
+        .expect("workspace should be initialized");
 
     let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
     let (vault_pda, _) = derive_vault_pda(&bounty_pda);
@@ -36,7 +36,7 @@ fn setup_open_bounty(
         [9u8; 32],
         DEADLINE_UNIX_TIMESTAMP,
     );
-    send_create_bounty_tx(svm, sponsor, ix).expect("el bounty debe crearse");
+    send_create_bounty_tx(svm, sponsor, ix).expect("bounty should be created");
 
     (workspace_pda, bounty_pda, vault_pda, 0)
 }
@@ -48,7 +48,7 @@ fn cancel_bounty_happy_path() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 501);
@@ -63,21 +63,21 @@ fn cancel_bounty_happy_path() {
         bounty_id,
     );
     send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect("el cancel debe ejecutarse");
+        .expect("cancellation should succeed");
 
     let bounty = fetch_bounty(&svm, &bounty_pda);
-    assert!(bounty.status == BountyStatus::Cancelled, "estado debe ser Cancelled");
-    assert_eq!(bounty.reward_amount, 0, "reward_amount debe quedar 0");
+    assert!(bounty.status == BountyStatus::Cancelled, "status should be Cancelled");
+    assert_eq!(bounty.reward_amount, 0, "reward_amount should be 0");
     assert_eq!(bounty.window_ends_at_ts, None);
 
     // Vault is drained.
-    assert_eq!(lamports(&svm, &vault_pda), 0, "vault debe quedar vacío");
+    assert_eq!(lamports(&svm, &vault_pda), 0, "vault should be empty");
 
     // Sponsor receives full refund minus tx fee.
     assert_eq!(
         lamports(&svm, &sponsor.pubkey()),
         sponsor_before + 1_000_000_000 - LITESVM_TX_FEE,
-        "sponsor debe recibir el reembolso completo"
+        "sponsor should receive full refund"
     );
 }
 
@@ -88,7 +88,7 @@ fn cancel_bounty_fails_when_not_open() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("debe financiar el sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 502);
@@ -98,14 +98,14 @@ fn cancel_bounty_fails_when_not_open() {
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
     send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect("el primer cancel debe ejecutarse");
+        .expect("first cancel should succeed");
 
     // Second cancel must fail: bounty is now Cancelled.
     let ix = build_cancel_bounty_ix(
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect_err("debe fallar si el bounty ya no está Open");
+        .expect_err("should fail if bounty is no longer Open");
 
     let err_msg = &err;
     assert!(
@@ -121,9 +121,9 @@ fn cancel_bounty_fails_when_submitted() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let contributor = Keypair::new();
-    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("financiar contributor");
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 503);
@@ -132,14 +132,14 @@ fn cancel_bounty_fails_when_submitted() {
     let ix = build_submit_work_ix(
         contributor.pubkey(), workspace_pda, bounty_pda, bounty_id, [1u8; 32],
     );
-    send_submit_work_tx(&mut svm, &contributor, ix).expect("submit work");
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("work should be submitted");
 
     // Sponsor tries to cancel a Submitted bounty – must fail.
     let ix = build_cancel_bounty_ix(
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect_err("no se puede cancelar un bounty Submitted");
+        .expect_err("cannot cancel a Submitted bounty");
 
     let err_msg = &err;
     assert!(
@@ -155,9 +155,9 @@ fn cancel_bounty_fails_for_non_sponsor() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
     let impostor = Keypair::new();
-    svm.airdrop(&impostor.pubkey(), 10_000_000_000).expect("financiar impostor");
+    svm.airdrop(&impostor.pubkey(), 10_000_000_000).expect("should fund impostor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 504);
@@ -167,10 +167,10 @@ fn cancel_bounty_fails_for_non_sponsor() {
         impostor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &impostor, &impostor.pubkey())
-        .expect_err("un impostor no puede cancelar el bounty");
+        .expect_err("impostor cannot cancel the bounty");
 
     let err_msg = &err;
-    assert!(!err_msg.is_empty(), "debe producir un error");
+    assert!(!err_msg.is_empty(), "should produce an error");
 }
 
 // ── Error: workspace paused ────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ fn cancel_bounty_fails_when_workspace_paused() {
     let (mut svm, authority) = setup_svm_with_program();
     set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
     let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("financiar sponsor");
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
 
     let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
         setup_open_bounty(&mut svm, &authority, &sponsor, 505);
@@ -191,7 +191,7 @@ fn cancel_bounty_fails_when_workspace_paused() {
         sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
     );
     let err = send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect_err("debe fallar si el workspace está pausado");
+        .expect_err("should fail when workspace is paused");
 
     let err_msg = &err;
     assert!(

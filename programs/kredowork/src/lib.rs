@@ -57,4 +57,15 @@ pub mod kredowork {
     pub fn reclaim_expired(ctx: Context<ReclaimExpired>, bounty_id: u64) -> Result<()> {
         instructions::reclaim_expired::handler(ctx, bounty_id)
     }
+
+    pub fn set_paused(ctx: Context<SetPaused>, is_paused: bool) -> Result<()> {
+        instructions::set_paused::handler(ctx, is_paused)
+    }
+
+    pub fn update_workspace(
+        ctx: Context<UpdateWorkspace>,
+        params: UpdateWorkspaceParams,
+    ) -> Result<()> {
+        instructions::update_workspace::handler(ctx, params)
+    }
 }

@@ -12,7 +12,7 @@ pub fn handler(ctx: Context<FinalizePayout>, bounty_id: u64) -> Result<()> {
     let bounty = &mut ctx.accounts.bounty;
     require!(
         bounty.bounty_id == bounty_id,
-        BountyError::InvalidStateTransition
+        BountyError::BountyIdMismatch
     );
     require!(
         bounty.status == BountyStatus::PreApproved,
@@ -32,7 +32,7 @@ pub fn handler(ctx: Context<FinalizePayout>, bounty_id: u64) -> Result<()> {
     require_keys_eq!(
         ctx.accounts.contributor.key(),
         claimant,
-        BountyError::SelfApprovalNotAllowed
+        BountyError::InvalidClaimant
     );
 
     let total_reward = bounty.reward_amount;
