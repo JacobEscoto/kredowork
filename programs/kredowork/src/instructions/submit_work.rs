@@ -24,13 +24,32 @@ pub fn handler(ctx: Context<SubmitWork>, bounty_id: u64, delivery_hash: [u8; 32]
         BountyError::WindowExpired
     );
 
-    bounty.claimant = Some(ctx.accounts.contributor.key());
+    if bounty.status == BountyStatus::Rejected {
+        let window_ends_at = bounty
+            .window_ends_at_ts
+            .ok_or(BountyError::InvalidStateTransition)?;
+        require!(
+            clock.unix_timestamp > window_ends_at,
+            BountyError::WindowNotExpired
+        );
+    }
+
+    let contributor_key = ctx.accounts.contributor.key();
+    require!(
+        contributor_key != bounty.sponsor,
+        BountyError::SelfApprovalNotAllowed
+    );
+
+    bounty.claimant = Some(contributor_key);
     bounty.delivery_hash = Some(delivery_hash);
     bounty.status = BountyStatus::Submitted;
     bounty.submitted_at_ts = Some(clock.unix_timestamp);
     bounty.approvals_count = 0;
     bounty.approvals_mask = 0;
     bounty.window_ends_at_ts = None;
+
+    bounty.rejected_claimant = None;
+    bounty.rejected_by = None;
 
     Ok(())
 }

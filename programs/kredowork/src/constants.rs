@@ -15,5 +15,8 @@ pub const DISPUTE_SEED: &[u8] = b"dispute";
 #[constant]
 pub const REPUTATION_SEED: &[u8] = b"reputation";
 
+#[constant]
+pub const DISPUTE_VAULT_SEED: &[u8] = b"dispute_vault";
+
 pub const MAX_REVIEWERS: usize = 8;
 pub const ARBITERS_COUNT: usize = 3;

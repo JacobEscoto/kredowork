@@ -35,6 +35,8 @@ pub fn handler(
     bounty.workspace = workspace.key();
     bounty.sponsor = ctx.accounts.sponsor.key();
     bounty.claimant = None;
+    bounty.rejected_claimant = None;
+    bounty.rejected_by = None;
     bounty.bounty_id = bounty_id;
     bounty.reward_amount = reward_amount;
     bounty.locked_bond = 0;

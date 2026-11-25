@@ -3,7 +3,7 @@ use crate::state::*;
 use crate::BountyError;
 use anchor_lang::prelude::*;
 
-/// A registered reviewer rejects a submitted work, resetting the bounty to `Open`
+/// A registered reviewer rejects a submitted work, resetting the bounty to `Rejected`
 /// so that another contributor can claim it (up to `max_submission_attempts`).
 /// The reviewer's index bit in `approvals_mask` is NOT written — masks are only
 /// meaningful during the approval flow and are reset when the bounty goes back to `Open`.
@@ -12,11 +12,10 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
     require!(!workspace.is_paused, BountyError::WorkspacePaused);
 
     let reviewer_key = ctx.accounts.reviewer.key();
-    workspace
-        .reviewers
-        .iter()
-        .position(|r| r == &reviewer_key)
-        .ok_or(BountyError::UnauthorizedReviewer)?;
+    require!(
+        workspace.reviewers.contains(&reviewer_key),
+        BountyError::UnauthorizedReviewer
+    );
 
     let bounty = &mut ctx.accounts.bounty;
     require!(bounty.bounty_id == bounty_id, BountyError::BountyIdMismatch);
@@ -26,27 +25,29 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
     );
 
     // Prevent the submitter from self-rejecting (same guard as self-approval).
-    if let Some(claimant) = bounty.claimant {
-        require!(
-            claimant != reviewer_key,
-            BountyError::SelfApprovalNotAllowed
-        );
-    }
+    let claimant = bounty.claimant.ok_or(BountyError::InvalidClaimant)?;
+    require!(
+        claimant != reviewer_key,
+        BountyError::SelfApprovalNotAllowed
+    );
 
     // Reset submission state so a new contributor can try.
     let clock = Clock::get()?;
+    let window_ends_at = clock
+        .unix_timestamp
+        .checked_add(workspace.challenge_window_secs)
+        .ok_or(BountyError::MathOverflow)?;
+
+    bounty.rejected_claimant = Some(claimant);
+    bounty.rejected_by = Some(reviewer_key);
+
     bounty.status = BountyStatus::Rejected;
     bounty.claimant = None;
     bounty.delivery_hash = None;
     bounty.submitted_at_ts = None;
     bounty.approvals_count = 0;
     bounty.approvals_mask = 0;
-    bounty.window_ends_at_ts = Some(
-        clock
-            .unix_timestamp
-            .checked_add(workspace.challenge_window_secs)
-            .ok_or(BountyError::MathOverflow)?,
-    );
+    bounty.window_ends_at_ts = Some(window_ends_at);
 
     Ok(())
 }

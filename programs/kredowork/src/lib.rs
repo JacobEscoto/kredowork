@@ -68,4 +68,32 @@ pub mod kredowork {
     ) -> Result<()> {
         instructions::update_workspace::handler(ctx, params)
     }
+
+    pub fn challenge_bounty(
+        ctx: Context<ChallengeBounty>,
+        bounty_id: u64,
+        challenge_evidence_hash: [u8; 32],
+    ) -> Result<()> {
+        instructions::challenge_bounty::handler(ctx, bounty_id, challenge_evidence_hash)
+    }
+
+    pub fn submit_defense(
+        ctx: Context<SubmitDefense>,
+        bounty_id: u64,
+        defense_evidence_hash: [u8; 32],
+    ) -> Result<()> {
+        instructions::submit_defense::handler(ctx, bounty_id, defense_evidence_hash)
+    }
+
+    pub fn vote_dispute(
+        ctx: Context<VoteDispute>,
+        bounty_id: u64,
+        side: DisputeVoteSide,
+    ) -> Result<()> {
+        instructions::vote_dispute::handler(ctx, bounty_id, side)
+    }
+
+    pub fn resolve_dispute<'a>(ctx: Context<'a, ResolveDispute<'a>>, bounty_id: u64) -> Result<()> {
+        instructions::resolve_dispute::handler(ctx, bounty_id)
+    }
 }
