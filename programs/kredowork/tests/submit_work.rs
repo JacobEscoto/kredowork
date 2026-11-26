@@ -297,9 +297,9 @@ fn submit_work_succeeds_after_rejection() {
     assert_eq!(bounty.approvals_mask, 0);
     assert_eq!(bounty.approvals_count, 0);
 
-    // A different contributor submits after rejection – the status is Rejected so
-    // the program currently requires Open/Claimed. This documents current behavior:
-    // rejected bounties need a manual reset or a re-open flow.
+    // A different contributor submits after rejection – status is Rejected and
+    // the attempt window has expired, so the submission is accepted again.
+    set_sysvar_clock(&mut svm, DEADLINE_UNIX_TIMESTAMP);
     let contributor2 = Keypair::new();
     svm.airdrop(&contributor2.pubkey(), 10_000_000_000)
         .expect("should fund contributor2");
@@ -311,12 +311,102 @@ fn submit_work_succeeds_after_rejection() {
         0,
         DELIVERY_HASH_2,
     );
-    let err = send_submit_work_tx(&mut svm, &contributor2, ix2).expect_err(
-        "submit after rejection must fail: Rejected is not Open/Claimed",
+    send_submit_work_tx(&mut svm, &contributor2, ix2).expect("resubmit after rejection should succeed");
+
+    let bounty = fetch_bounty(&svm, &bounty_pda);
+    assert_eq!(bounty.claimant, Some(contributor2.pubkey()));
+    assert!(bounty.status == BountyStatus::Submitted);
+}
+
+// ── Error: max submission attempts reached after repeated rejections ──────────
+
+#[test]
+fn submit_work_fails_on_max_attempts_reached() {
+    let (mut svm, authority) = setup_svm_with_program();
+    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
+    let sponsor = Keypair::new();
+    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
+
+    // Use workspace with reviewers that we control.
+    let workspace_id = 203_u64;
+    let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
+    let reviewer = Keypair::new();
+    svm.airdrop(&reviewer.pubkey(), 10_000_000_000).expect("should fund reviewer");
+    let mut params = valid_params(workspace_id);
+    params.reviewers = vec![reviewer.pubkey(), Pubkey::new_unique()];
+    send_initialize_workspace_tx(&mut svm, &authority, workspace_pda, params)
+        .expect("workspace should be initialized");
+
+    let (bounty_pda, _) = derive_bounty_pda(&workspace_pda, 0);
+    let (vault_pda, _) = derive_vault_pda(&bounty_pda);
+    let ix = build_create_bounty_ix(
+        sponsor.pubkey(),
+        workspace_pda,
+        bounty_pda,
+        vault_pda,
+        1_000_000_000,
+        [9u8; 32],
+        DEADLINE_UNIX_TIMESTAMP,
     );
+    send_create_bounty_tx(&mut svm, &sponsor, ix).expect("bounty should be created");
+
+    let contributor = Keypair::new();
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
+
+    // submit → reject → submit → reject → submit → reject → submit (exhausted).
+    let ix = build_submit_work_ix(
+        contributor.pubkey(),
+        workspace_pda,
+        bounty_pda,
+        0,
+        DELIVERY_HASH,
+    );
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("submit should succeed");
+
+    let ix = build_reject_work_ix(reviewer.pubkey(), workspace_pda, bounty_pda, 0);
+    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject should succeed");
+    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP + 4_000);
+
+    let ix = build_submit_work_ix(
+        contributor.pubkey(),
+        workspace_pda,
+        bounty_pda,
+        0,
+        DELIVERY_HASH,
+    );
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("resubmit should succeed");
+
+    let ix = build_reject_work_ix(reviewer.pubkey(), workspace_pda, bounty_pda, 0);
+    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject should succeed");
+    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP + 8_000);
+
+    let ix = build_submit_work_ix(
+        contributor.pubkey(),
+        workspace_pda,
+        bounty_pda,
+        0,
+        DELIVERY_HASH,
+    );
+    send_submit_work_tx(&mut svm, &contributor, ix).expect("resubmit should succeed");
+
+    let ix = build_reject_work_ix(reviewer.pubkey(), workspace_pda, bounty_pda, 0);
+    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject should succeed");
+    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP + 12_000);
+
+    // The submission attempts counter is now exhausted (max_submission_attempts).
+    let ix = build_submit_work_ix(
+        contributor.pubkey(),
+        workspace_pda,
+        bounty_pda,
+        0,
+        DELIVERY_HASH,
+    );
+    let err = send_submit_work_tx(&mut svm, &contributor, ix)
+        .expect_err("submit after max attempts should fail");
+
     let err_msg = &err;
     assert!(
-        err_msg.contains("InvalidStateTransition") || err_msg.contains("6003"),
+        err_msg.contains("MaxAttemptsReached") || err_msg.contains("6016"),
         "unexpected error: {err_msg}"
     );
 }

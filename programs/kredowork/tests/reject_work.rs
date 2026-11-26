@@ -73,11 +73,25 @@ fn reject_work_happy_path() {
     let bounty = fetch_bounty(&svm, &bounty_pda);
     assert!(bounty.status == BountyStatus::Rejected, "status should be Rejected");
     assert_eq!(bounty.claimant, None, "claimant should be cleared");
+    assert_eq!(
+        bounty.rejected_claimant,
+        Some(contributor.pubkey()),
+        "rejected_claimant should be the rejected contributor"
+    );
+    assert_eq!(
+        bounty.rejected_by,
+        Some(reviewer.pubkey()),
+        "rejected_by should be the rejecting reviewer"
+    );
     assert_eq!(bounty.delivery_hash, None, "delivery_hash should be cleared");
     assert_eq!(bounty.submitted_at_ts, None, "submitted_at_ts should be cleared");
     assert_eq!(bounty.approvals_count, 0, "approvals_count should be 0");
     assert_eq!(bounty.approvals_mask, 0, "approvals_mask should be 0");
-    assert_eq!(bounty.window_ends_at_ts, None, "window_ends_at_ts should be None");
+    assert_eq!(
+        bounty.window_ends_at_ts,
+        Some(CLOCK_UNIX_TIMESTAMP + 3_600),
+        "window_ends_at_ts should be the new submission window after rejection"
+    );
     // Funds remain in the vault.
     assert_eq!(lamports(&svm, &derive_vault_pda(&bounty_pda).0), 1_000_000_000);
 }
@@ -135,6 +149,30 @@ fn reject_work_fails_for_unauthorized_reviewer() {
     assert!(
         err_msg.contains("UnauthorizedReviewer") || err_msg.contains("6004"),
         "unexpected error: {err_msg}"
+    );
+}
+
+#[test]
+fn reject_work_increments_submission_attempts() {
+    let (mut svm, authority) = setup_svm_with_program();
+    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
+
+    let contributor = Keypair::new();
+    svm.airdrop(&contributor.pubkey(), 10_000_000_000).expect("should fund contributor");
+
+    let (workspace_pda, bounty_pda, reviewer, _) =
+        setup_submitted_bounty(&mut svm, &authority, 707, &contributor);
+
+    let bounty_before = fetch_bounty(&svm, &bounty_pda);
+    assert_eq!(bounty_before.submission_attempts, 0);
+
+    let ix = build_reject_work_ix(reviewer.pubkey(), workspace_pda, bounty_pda, 0);
+    send_reject_work_tx(&mut svm, &reviewer, ix).expect("reject should succeed");
+
+    let bounty = fetch_bounty(&svm, &bounty_pda);
+    assert_eq!(
+        bounty.submission_attempts, 1,
+        "reject should increment submission_attempts"
     );
 }
 

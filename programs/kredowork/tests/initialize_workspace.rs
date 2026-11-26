@@ -132,6 +132,7 @@ fn initialize_workspace_happy_path() {
     assert_eq!(state.review_timeout_secs, 7200);
     assert_eq!(state.fee_bps, 250);
     assert_eq!(state.bond_bps, 1000);
+    assert_eq!(state.reviewers_epoch, 0);
     assert_eq!(state.reviewers, vec![reviewer_1, reviewer_2]);
     assert!(!state.is_paused);
     assert_eq!(state.bump, expected_bump);
@@ -272,4 +273,40 @@ fn initialize_workspace_fails_on_duplicate_pda() {
         .expect_err("the second initialization on the same PDA should fail");
 
     assert!(!err.is_empty());
+}
+
+#[test]
+fn initialize_workspace_fails_when_bps_exceeds_max() {
+    let (mut svm, authority) = setup_svm_with_program();
+    let workspace_id = 42_u64;
+    let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
+
+    let mut params = valid_params(workspace_id);
+    params.fee_bps = 10_001;
+
+    let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
+        .expect_err("fee_bps above 10_000 should fail");
+
+    assert!(
+        err.contains("InvalidBps") || err.contains("6020"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn initialize_workspace_fails_when_bond_bps_exceeds_max() {
+    let (mut svm, authority) = setup_svm_with_program();
+    let workspace_id = 43_u64;
+    let (workspace_pda, _) = derive_workspace_pda(&authority.pubkey(), workspace_id);
+
+    let mut params = valid_params(workspace_id);
+    params.bond_bps = 10_001;
+
+    let err = send_init_tx(&mut svm, &authority, workspace_pda, params)
+        .expect_err("bond_bps above 10_000 should fail");
+
+    assert!(
+        err.contains("InvalidBps") || err.contains("6020"),
+        "unexpected error: {err}"
+    );
 }

@@ -64,6 +64,7 @@ fn create_bounty_happy_path() {
     assert!(bounty.status == BountyStatus::Open);
     assert_eq!(bounty.locked_bond, 0);
     assert_eq!(bounty.approvals_count, 0);
+    assert_eq!(bounty.submission_attempts, 0);
     assert_eq!(bounty.submitted_at_ts, None);
     assert_eq!(bounty.window_ends_at_ts, None);
     assert_eq!(bounty.bump, bounty_bump);

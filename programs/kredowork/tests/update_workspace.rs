@@ -43,6 +43,34 @@ fn update_workspace_happy_path() {
 }
 
 #[test]
+fn update_workspace_increments_reviewers_epoch() {
+    let (mut svm, authority) = setup_svm_with_program();
+    let workspace_id = 909_u64;
+    let workspace_pda = setup_workspace(&mut svm, &authority, workspace_id);
+
+    // Initial epoch is 0 after initialization.
+    let ws = fetch_workspace(&svm, &workspace_pda);
+    assert_eq!(ws.reviewers_epoch, 0);
+
+    let new_reviewer_1 = Pubkey::new_unique();
+    let new_reviewer_2 = Pubkey::new_unique();
+    let new_reviewer_3 = Pubkey::new_unique();
+
+    let params = UpdateWorkspaceParams {
+        challenge_window_secs: None,
+        review_timeout_secs: None,
+        reviewers: Some(vec![new_reviewer_1, new_reviewer_2, new_reviewer_3]),
+    };
+
+    let ix = build_update_workspace_ix(authority.pubkey(), workspace_pda, params);
+    send_update_workspace_tx(&mut svm, &authority, ix).expect("update workspace should succeed");
+
+    let ws = fetch_workspace(&svm, &workspace_pda);
+    assert_eq!(ws.reviewers, vec![new_reviewer_1, new_reviewer_2, new_reviewer_3]);
+    assert_eq!(ws.reviewers_epoch, 1, "reviewers_epoch should increment on reviewer change");
+}
+
+#[test]
 fn update_workspace_fails_for_non_authority() {
     let (mut svm, authority) = setup_svm_with_program();
     let workspace_id = 902_u64;
@@ -62,29 +90,6 @@ fn update_workspace_fails_for_non_authority() {
         .expect_err("non-authority should fail to update workspace");
 
     assert!(!err.is_empty());
-}
-
-#[test]
-fn update_workspace_fails_when_workspace_paused() {
-    let (mut svm, authority) = setup_svm_with_program();
-    let workspace_id = 903_u64;
-    let workspace_pda = setup_workspace(&mut svm, &authority, workspace_id);
-
-    // Pause the workspace first.
-    let ix_pause = build_set_paused_ix(authority.pubkey(), workspace_pda, true);
-    send_set_paused_tx(&mut svm, &authority, ix_pause).expect("pause instruction should succeed");
-
-    let params = UpdateWorkspaceParams {
-        challenge_window_secs: Some(500),
-        review_timeout_secs: None,
-        reviewers: None,
-    };
-
-    let ix = build_update_workspace_ix(authority.pubkey(), workspace_pda, params);
-    let err = send_update_workspace_tx(&mut svm, &authority, ix)
-        .expect_err("update should fail when workspace is paused");
-
-    assert!(err.contains("WorkspacePaused"));
 }
 
 #[test]

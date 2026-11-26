@@ -4,11 +4,12 @@ use std::path::PathBuf;
 
 use anchor_lang::{prelude::*, InstructionData, ToAccountMetas};
 use kredowork::{
-    constants::{BOUNTY_SEED, VAULT_SEED, WORKSPACE_SEED},
+    constants::{BOUNTY_SEED, DISPUTE_SEED, DISPUTE_VAULT_SEED, VAULT_SEED, WORKSPACE_SEED},
     instructions::{
         initialize_workspace::WorkspaceParams, update_workspace::UpdateWorkspaceParams,
+        vote_dispute::DisputeVoteSide,
     },
-    state::{BountyAccount, WorkspaceConfig},
+    state::{BountyAccount, DisputeAccount, WorkspaceConfig},
     ID as PROGRAM_ID,
 };
 use litesvm::LiteSVM;
@@ -77,6 +78,20 @@ pub fn derive_bounty_pda(workspace_key: &Pubkey, bounty_id: u64) -> (Pubkey, u8)
 
 pub fn derive_vault_pda(bounty_key: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[VAULT_SEED, bounty_key.as_ref()], &PROGRAM_ID)
+}
+
+pub fn derive_dispute_pda(bounty_key: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[DISPUTE_SEED, bounty_key.as_ref()], &PROGRAM_ID)
+}
+
+pub fn derive_dispute_vault_pda(dispute_key: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[DISPUTE_VAULT_SEED, dispute_key.as_ref()], &PROGRAM_ID)
+}
+
+pub fn fetch_dispute(svm: &LiteSVM, address: &Pubkey) -> DisputeAccount {
+    let account = svm.get_account(address).expect("the dispute must exist");
+    let mut data_slice: &[u8] = &account.data;
+    DisputeAccount::try_deserialize(&mut data_slice).expect("DisputeAccount must be deserialized")
 }
 
 pub fn valid_params(workspace_id: u64) -> WorkspaceParams {
@@ -446,4 +461,136 @@ pub fn set_workspace_paused(svm: &mut LiteSVM, address: &Pubkey, paused: bool) {
     account.data = out;
     svm.set_account(*address, account)
         .expect("the paused workspace must be persisted");
+}
+
+pub fn build_challenge_bounty_ix(
+    challenger: Pubkey,
+    respondent: Pubkey,
+    workspace_pda: Pubkey,
+    bounty_pda: Pubkey,
+    dispute_pda: Pubkey,
+    dispute_vault_pda: Pubkey,
+    arbitrators: Vec<Pubkey>,
+    bounty_id: u64,
+    challenge_evidence_hash: [u8; 32],
+) -> Instruction {
+    let accounts = kredowork::accounts::ChallengeBounty {
+        workspace: workspace_pda,
+        bounty: bounty_pda,
+        dispute: dispute_pda,
+        dispute_vault: dispute_vault_pda,
+        challenger,
+        respondent,
+        system_program: anchor_lang::system_program::ID,
+    }
+    .to_account_metas(None);
+
+    let mut all_accounts = accounts;
+    for arbiter in arbitrators {
+        all_accounts.push(AccountMeta::new_readonly(arbiter, false));
+    }
+
+    let data = kredowork::instruction::ChallengeBounty {
+        bounty_id,
+        challenge_evidence_hash,
+    }
+    .data();
+
+    Instruction {
+        program_id: PROGRAM_ID,
+        accounts: all_accounts,
+        data,
+    }
+}
+
+pub fn send_challenge_bounty_tx(
+    svm: &mut LiteSVM,
+    challenger: &Keypair,
+    ix: Instruction,
+) -> std::result::Result<(), String> {
+    send_instruction(svm, ix, challenger, &challenger.pubkey())
+}
+
+pub fn build_vote_dispute_ix(
+    arbiter: Pubkey,
+    workspace_pda: Pubkey,
+    bounty_pda: Pubkey,
+    dispute_pda: Pubkey,
+    bounty_id: u64,
+    side: DisputeVoteSide,
+) -> Instruction {
+    let accounts = kredowork::accounts::VoteDispute {
+        workspace: workspace_pda,
+        bounty: bounty_pda,
+        dispute: dispute_pda,
+        arbiter,
+    }
+    .to_account_metas(None);
+
+    let data = kredowork::instruction::VoteDispute { bounty_id, side }.data();
+
+    Instruction {
+        program_id: PROGRAM_ID,
+        accounts,
+        data,
+    }
+}
+
+pub fn send_vote_dispute_tx(
+    svm: &mut LiteSVM,
+    arbiter: &Keypair,
+    ix: Instruction,
+) -> std::result::Result<(), String> {
+    send_instruction(svm, ix, arbiter, &arbiter.pubkey())
+}
+
+pub fn build_resolve_dispute_ix(
+    caller: Pubkey,
+    workspace_pda: Pubkey,
+    bounty_pda: Pubkey,
+    vault_pda: Pubkey,
+    dispute_pda: Pubkey,
+    dispute_vault_pda: Pubkey,
+    sponsor: Pubkey,
+    winner: Pubkey,
+    loser: Pubkey,
+    fee_recipient: Pubkey,
+    bounty_id: u64,
+    arbitrators: Vec<Pubkey>,
+) -> Instruction {
+    let accounts = kredowork::accounts::ResolveDispute {
+        workspace: workspace_pda,
+        bounty: bounty_pda,
+        dispute: dispute_pda,
+        bounty_vault: vault_pda,
+        dispute_vault: dispute_vault_pda,
+        sponsor,
+        winner,
+        loser,
+        fee_recipient,
+        caller,
+        system_program: anchor_lang::system_program::ID,
+    }
+    .to_account_metas(None);
+
+    let mut all_accounts = accounts;
+    for arbiter in arbitrators {
+        all_accounts.push(AccountMeta::new(arbiter, false));
+    }
+
+    let data = kredowork::instruction::ResolveDispute { bounty_id }.data();
+
+    Instruction {
+        program_id: PROGRAM_ID,
+        accounts: all_accounts,
+        data,
+    }
+}
+
+pub fn send_resolve_dispute_tx(
+    svm: &mut LiteSVM,
+    caller: &Keypair,
+    ix: Instruction,
+) -> std::result::Result<(), String> {
+    send_instruction(svm, ix, caller, &caller.pubkey())
 }

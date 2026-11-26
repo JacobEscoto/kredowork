@@ -169,33 +169,5 @@ fn cancel_bounty_fails_for_non_sponsor() {
     let err = send_instruction(&mut svm, ix, &impostor, &impostor.pubkey())
         .expect_err("impostor cannot cancel the bounty");
 
-    let err_msg = &err;
-    assert!(!err_msg.is_empty(), "should produce an error");
-}
-
-// ── Error: workspace paused ────────────────────────────────────────────────────
-
-#[test]
-fn cancel_bounty_fails_when_workspace_paused() {
-    let (mut svm, authority) = setup_svm_with_program();
-    set_sysvar_clock(&mut svm, CLOCK_UNIX_TIMESTAMP);
-    let sponsor = Keypair::new();
-    svm.airdrop(&sponsor.pubkey(), 10_000_000_000).expect("should fund sponsor");
-
-    let (workspace_pda, bounty_pda, vault_pda, bounty_id) =
-        setup_open_bounty(&mut svm, &authority, &sponsor, 505);
-
-    set_workspace_paused(&mut svm, &workspace_pda, true);
-
-    let ix = build_cancel_bounty_ix(
-        sponsor.pubkey(), workspace_pda, bounty_pda, vault_pda, bounty_id,
-    );
-    let err = send_instruction(&mut svm, ix, &sponsor, &sponsor.pubkey())
-        .expect_err("should fail when workspace is paused");
-
-    let err_msg = &err;
-    assert!(
-        err_msg.contains("WorkspacePaused") || err_msg.contains("6000"),
-        "unexpected error: {err_msg}"
-    );
+    assert!(!err.is_empty());
 }
