@@ -28,6 +28,10 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
         BountyError::InvalidWindowDuration
     );
     require!(params.review_timeout_secs > 0, BountyError::InvalidWindowDuration);
+    require!(
+        params.fee_bps <= 10_000 && params.bond_bps <= 10_000,
+        BountyError::InvalidBps
+    );
 
     let workspace = &mut ctx.accounts.workspace;
     workspace.authority = ctx.accounts.authority.key();
@@ -39,6 +43,7 @@ pub fn handler(ctx: Context<InitializeWorkspace>, params: WorkspaceParams) -> Re
     workspace.review_timeout_secs = params.review_timeout_secs;
     workspace.fee_bps = params.fee_bps;
     workspace.bond_bps = params.bond_bps;
+    workspace.reviewers_epoch = 0;
     workspace.reviewers = params.reviewers;
     workspace.is_paused = false;
     workspace.bump = ctx.bumps.workspace;

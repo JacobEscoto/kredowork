@@ -22,7 +22,6 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = "1.2.2"
-solana-program = "6"
 
 [dev-dependencies]
 # Cargo.lock pins LiteSVM's Rust-1.89-compatible dependency graph.

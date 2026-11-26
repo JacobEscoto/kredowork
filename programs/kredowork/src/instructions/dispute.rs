@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_program::hash::hashv;
 
 use crate::constants::*;
 use crate::errors::BountyError;
@@ -117,22 +116,57 @@ pub fn select_dispute_arbiters(
 
     let mut arbiters = [Pubkey::default(); ARBITERS_COUNT];
     for (slot_idx, arbiter_slot) in arbiters.iter_mut().enumerate() {
-        let digest = hashv(&[
-            b"kredowork-arbiter",
-            &clock.slot.to_le_bytes(),
-            &clock.unix_timestamp.to_le_bytes(),
-            bounty_key.as_ref(),
-            challenger.as_ref(),
-            respondent.as_ref(),
-            &(slot_idx as u8).to_le_bytes(),
-        ]);
-        let bytes = digest.to_bytes();
+        let digest = derive_arbiter_seed(
+            clock.slot,
+            clock.unix_timestamp,
+            bounty_key,
+            challenger,
+            respondent,
+            slot_idx as u8,
+        );
         let mut raw_bytes = [0u8; 8];
-        raw_bytes.copy_from_slice(&bytes[..8]);
+        raw_bytes.copy_from_slice(&digest[..8]);
         let raw = u64::from_le_bytes(raw_bytes);
         let pick = (raw as usize) % candidates.len();
         *arbiter_slot = candidates.swap_remove(pick);
     }
 
     Ok(arbiters)
+}
+
+fn derive_arbiter_seed(
+    slot: u64,
+    unix_timestamp: i64,
+    bounty_key: &Pubkey,
+    challenger: &Pubkey,
+    respondent: &Pubkey,
+    slot_idx: u8,
+) -> [u8; 32] {
+    let mut state: [u64; 4] = [
+        0x9E37_79B9_7F4A_7C15 ^ slot ^ (unix_timestamp as u64).rotate_left(17),
+        0xBF58_476D_1CE4_E5B9 ^ ((slot_idx as u64) << 56),
+        0x94D0_49BB_1331_11EB,
+        0xD6E8_FEB8_6659_FD93,
+    ];
+
+    let mut mix_bytes = |bytes: &[u8], lane: usize| {
+        for (i, b) in bytes.iter().enumerate() {
+            let idx = (lane + i) % 4;
+            let mut x = state[idx].wrapping_add((*b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+            state[idx] = x ^ (x >> 31);
+        }
+    };
+
+    mix_bytes(b"kredowork-arbiter", 0);
+    mix_bytes(bounty_key.as_ref(), 1);
+    mix_bytes(challenger.as_ref(), 2);
+    mix_bytes(respondent.as_ref(), 3);
+
+    let mut out = [0u8; 32];
+    for (i, word) in state.iter().enumerate() {
+        out[i * 8..(i + 1) * 8].copy_from_slice(&word.to_le_bytes());
+    }
+    out
 }

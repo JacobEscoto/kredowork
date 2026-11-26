@@ -6,7 +6,6 @@ use crate::state::WorkspaceConfig;
 
 pub fn handler(ctx: Context<UpdateWorkspace>, params: UpdateWorkspaceParams) -> Result<()> {
     let workspace = &mut ctx.accounts.workspace;
-    require!(!workspace.is_paused, BountyError::WorkspacePaused);
 
     if let Some(challenge_window_secs) = params.challenge_window_secs {
         require!(challenge_window_secs > 0, BountyError::InvalidWindowDuration);
@@ -36,6 +35,10 @@ pub fn handler(ctx: Context<UpdateWorkspace>, params: UpdateWorkspaceParams) -> 
         }
 
         workspace.reviewers = reviewers;
+        workspace.reviewers_epoch = workspace
+            .reviewers_epoch
+            .checked_add(1)
+            .ok_or(BountyError::MathOverflow)?;
     }
 
     Ok(())

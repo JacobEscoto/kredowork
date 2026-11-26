@@ -27,7 +27,7 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
         || clock.unix_timestamp > dispute.deadline_ts;
     require!(decided, BountyError::WindowNotExpired);
 
-    let challenger_won = dispute.votes_for_challenger >= dispute.votes_for_respondent;
+    let challenger_won = dispute.votes_for_challenger > dispute.votes_for_respondent;
     let (winner_key, loser_key) = if challenger_won {
         (dispute.challenger, dispute.respondent)
     } else {
@@ -50,12 +50,10 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
     let (winner_total, per_arbiter) = split_dispute_bond(total_bond)?;
 
     let dispute_key = dispute.key();
-    let (_, dispute_vault_bump) =
-        Pubkey::find_program_address(&[DISPUTE_VAULT_SEED, dispute_key.as_ref()], ctx.program_id);
     let dispute_vault_seeds: &[&[&[u8]]] = &[&[
         DISPUTE_VAULT_SEED,
         dispute_key.as_ref(),
-        &[dispute_vault_bump],
+        &[ctx.bumps.dispute_vault],
     ]];
 
     if total_bond > 0 {
@@ -78,9 +76,15 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
                 ctx.remaining_accounts.len() >= ARBITERS_COUNT,
                 BountyError::UnauthorizedArbiter
             );
-            for arbiter_info in ctx.remaining_accounts.iter().take(ARBITERS_COUNT) {
-                require!(
-                    dispute.arbiters.contains(&arbiter_info.key()),
+            for (i, arbiter_info) in ctx
+                .remaining_accounts
+                .iter()
+                .take(ARBITERS_COUNT)
+                .enumerate()
+            {
+                require_keys_eq!(
+                    arbiter_info.key(),
+                    dispute.arbiters[i],
                     BountyError::UnauthorizedArbiter
                 );
                 system_program::transfer(
@@ -99,7 +103,9 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
     }
 
     // 2. Settle the bounty reward: winner is the claimant (payout) or the sponsor (refund).
-    let claimant = bounty.claimant.ok_or(BountyError::InvalidClaimant)?;
+    let claimant = bounty
+        .rejected_claimant
+        .ok_or(BountyError::InvalidClaimant)?;
     let reward = bounty.reward_amount;
     let bounty_key = bounty.key();
     let vault_bump = bounty.vault_bump;
@@ -136,7 +142,6 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
                     fee_amount,
                 )?;
             }
-            bounty.status = BountyStatus::Completed;
         } else {
             system_program::transfer(
                 CpiContext::new_with_signer(
@@ -149,7 +154,6 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
                 ),
                 reward,
             )?;
-            bounty.status = BountyStatus::Rejected;
         }
     }
 
@@ -157,6 +161,12 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
     bounty.reward_amount = 0;
     bounty.locked_bond = 0;
     bounty.window_ends_at_ts = None;
+
+    bounty.status = if winner_key == bounty.sponsor {
+        BountyStatus::Cancelled
+    } else {
+        BountyStatus::Completed
+    };
 
     dispute.status = if challenger_won {
         DisputeStatus::ResolvedForChallenger
@@ -235,10 +245,7 @@ pub struct ResolveDispute<'info> {
     )]
     pub fee_recipient: UncheckedAccount<'info>,
 
-    /// CHECK: Only the workspace authority can resolve a dispute.
-    #[account(
-        address = workspace.authority
-    )]
+    /// CHECK: Any signer may resolve a dispute.
     pub caller: Signer<'info>,
 
     pub system_program: Program<'info, System>,

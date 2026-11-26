@@ -5,20 +5,26 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{self, Transfer};
 
 pub fn handler(ctx: Context<ReclaimExpired>, bounty_id: u64) -> Result<()> {
-    let workspace = &ctx.accounts.workspace;
-    require!(!workspace.is_paused, BountyError::WorkspacePaused);
-
     let bounty = &mut ctx.accounts.bounty;
     require!(
         bounty.bounty_id == bounty_id,
         BountyError::BountyIdMismatch
     );
     require!(
-        matches!(bounty.status, BountyStatus::Open | BountyStatus::Claimed),
+        matches!(
+            bounty.status,
+            BountyStatus::Open | BountyStatus::Claimed | BountyStatus::Rejected
+        ),
         BountyError::InvalidStateTransition
     );
 
     let clock = Clock::get()?;
+    if bounty.status == BountyStatus::Rejected {
+        require!(
+            clock.unix_timestamp > bounty.window_ends_at_ts.ok_or(BountyError::InvalidStateTransition)?,
+            BountyError::InvalidStateTransition
+        );
+    }
     require!(
         clock.unix_timestamp > bounty.deadline_ts,
         BountyError::WindowNotExpired

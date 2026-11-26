@@ -48,6 +48,7 @@ pub fn handler(
     bounty.window_ends_at_ts = None;
     bounty.approvals_count = 0;
     bounty.approvals_mask = 0;
+    bounty.submission_attempts = 0;
     bounty.bump = ctx.bumps.bounty;
     bounty.vault_bump = ctx.bumps.vault;
     Ok(())

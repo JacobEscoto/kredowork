@@ -30,6 +30,12 @@ pub fn handler(ctx: Context<ApproveWork>, bounty_id: u64) -> Result<()> {
         BountyError::InvalidStateTransition
     );
 
+    if bounty.approvals_epoch != workspace.reviewers_epoch {
+        bounty.approvals_mask = 0;
+        bounty.approvals_count = 0;
+        bounty.approvals_epoch = workspace.reviewers_epoch;
+    }
+
     if let Some(claimant) = bounty.claimant {
         require!(
             claimant != reviewer_key,

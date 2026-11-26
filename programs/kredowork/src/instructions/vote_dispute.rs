@@ -28,10 +28,17 @@ pub fn handler(ctx: Context<VoteDispute>, bounty_id: u64, side: DisputeVoteSide)
     require_window_open(&clock, dispute.deadline_ts)?;
 
     let arbiter_key = ctx.accounts.arbiter.key();
+    let arbiter_idx = dispute
+        .arbiters
+        .iter()
+        .position(|a| *a == arbiter_key)
+        .ok_or(BountyError::UnauthorizedArbiter)? as u8;
+    let mask_bit: u8 = 1u8 << arbiter_idx;
     require!(
-        dispute.arbiters.contains(&arbiter_key),
-        BountyError::UnauthorizedArbiter
+        (dispute.votes_mask & mask_bit) == 0,
+        BountyError::DuplicateAction
     );
+    dispute.votes_mask |= mask_bit;
 
     match side {
         DisputeVoteSide::Challenger => {

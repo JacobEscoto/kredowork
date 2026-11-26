@@ -5,9 +5,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{self, Transfer};
 
 pub fn handler(ctx: Context<CancelBounty>, bounty_id: u64) -> Result<()> {
-    let workspace = &ctx.accounts.workspace;
-    require!(!workspace.is_paused, BountyError::WorkspacePaused);
-
     let bounty = &mut ctx.accounts.bounty;
     require!(
         bounty.bounty_id == bounty_id,

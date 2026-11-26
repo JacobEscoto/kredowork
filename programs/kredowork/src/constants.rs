@@ -20,3 +20,4 @@ pub const DISPUTE_VAULT_SEED: &[u8] = b"dispute_vault";
 
 pub const MAX_REVIEWERS: usize = 8;
 pub const ARBITERS_COUNT: usize = 3;
+pub const MIN_ARBITER_POOL: usize = 9;

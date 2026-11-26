@@ -25,6 +25,10 @@ pub fn handler(ctx: Context<SubmitWork>, bounty_id: u64, delivery_hash: [u8; 32]
     );
 
     if bounty.status == BountyStatus::Rejected {
+        require!(
+            bounty.submission_attempts < workspace.max_submission_attempts,
+            BountyError::MaxAttemptsReached
+        );
         let window_ends_at = bounty
             .window_ends_at_ts
             .ok_or(BountyError::InvalidStateTransition)?;

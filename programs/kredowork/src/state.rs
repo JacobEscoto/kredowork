@@ -1,7 +1,7 @@
 use crate::constants::*;
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace, Debug)]
 pub enum BountyStatus {
     Open,
     Claimed,
@@ -14,7 +14,7 @@ pub enum BountyStatus {
     Expired,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace, Debug)]
 pub enum DisputeStatus {
     Open,
     ResolvedForChallenger,
@@ -33,6 +33,7 @@ pub struct WorkspaceConfig {
     pub review_timeout_secs: i64,
     pub fee_bps: u16,
     pub bond_bps: u16,
+    pub reviewers_epoch: u16,
     #[max_len(MAX_REVIEWERS)]
     pub reviewers: Vec<Pubkey>,
     pub is_paused: bool,
@@ -58,6 +59,8 @@ pub struct BountyAccount {
     pub window_ends_at_ts: Option<i64>,
     pub approvals_count: u8,
     pub approvals_mask: u8,
+    pub approvals_epoch: u16,
+    pub submission_attempts: u8,
     pub bump: u8,
     pub vault_bump: u8,
 }

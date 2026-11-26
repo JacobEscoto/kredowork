@@ -42,6 +42,10 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
     bounty.rejected_by = Some(reviewer_key);
 
     bounty.status = BountyStatus::Rejected;
+    bounty.submission_attempts = bounty
+        .submission_attempts
+        .checked_add(1)
+        .ok_or(BountyError::MathOverflow)?;
     bounty.claimant = None;
     bounty.delivery_hash = None;
     bounty.submitted_at_ts = None;

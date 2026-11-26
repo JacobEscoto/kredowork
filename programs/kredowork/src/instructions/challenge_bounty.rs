@@ -33,10 +33,11 @@ pub fn handler(
         BountyError::SelfApprovalNotAllowed
     );
 
-    let claimant_key = bounty.claimant.ok_or(BountyError::InvalidClaimant)?;
-    let valid_pair = (challenger_key == bounty.sponsor && respondent_key == claimant_key)
-        || (challenger_key == claimant_key && respondent_key == bounty.sponsor);
-    require!(valid_pair, BountyError::UnauthorizedReviewer);
+    let claimant_key = bounty.rejected_claimant.ok_or(BountyError::InvalidClaimant)?;
+    require!(
+        challenger_key == claimant_key && respondent_key == bounty.sponsor,
+        BountyError::InvalidChallenger
+    );
 
     // Filter eligible candidates by excluding involved parties and workspace reviewers.
     let mut candidates: Vec<Pubkey> = Vec::new();
@@ -45,6 +46,8 @@ pub fn handler(
         if key == bounty.sponsor
             || key == challenger_key
             || key == respondent_key
+            || key == workspace.authority
+            || bounty.rejected_by == Some(key)
             || workspace.reviewers.contains(&key)
             || candidates.contains(&key)
         {
@@ -52,6 +55,11 @@ pub fn handler(
         }
         candidates.push(key);
     }
+
+    require!(
+        candidates.len() >= MIN_ARBITER_POOL,
+        BountyError::UnauthorizedArbiter
+    );
 
     let arbiters = select_dispute_arbiters(
         candidates,
@@ -85,6 +93,7 @@ pub fn handler(
     dispute.arbiters = arbiters;
     dispute.votes_for_challenger = 0;
     dispute.votes_for_respondent = 0;
+    dispute.votes_mask = 0;
     dispute.status = DisputeStatus::Open;
     dispute.deadline_ts = clock
         .unix_timestamp

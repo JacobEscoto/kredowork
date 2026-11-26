@@ -8,7 +8,7 @@ use anchor_lang::prelude::*;
 use errors::BountyError;
 use instructions::*;
 
-declare_id!("ArDpfoTVD98T1NAoGG3XZw9NagP5sja63YzsfbSQ9QsB");
+declare_id!("3RzuS3G4ed9akp7BLLckdQSFb6jQCckdvhNnkwwYFHcb");
 
 #[program]
 pub mod kredowork {

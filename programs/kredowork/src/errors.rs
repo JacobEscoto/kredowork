@@ -64,4 +64,13 @@ pub enum BountyError {
 
     #[msg("The provided bounty ID does not match the account bounty ID.")]
     BountyIdMismatch,
+
+    #[msg("The fee or bond basis points cannot exceed the maximum of 10,000.")]
+    InvalidBps,
+
+    #[msg("The maximum submission attempts has been reached.")]
+    MaxAttemptsReached,
+
+    #[msg("The challenger and respondent do not form a valid dispute pair.")]
+    InvalidChallenger,
 }
