@@ -22,9 +22,9 @@ Open-source maintenance and developer tooling often stall on small, well-scoped 
 ## Project Structure
 ```bash
 kredowork/
-├── programs/           # Anchor on-chain program (accounts, state machine, instructions, and tests)
-|-- apps/
-     └── web/            # Next.js + Tailwind CSS frontend
+├── programs/               # Anchor on-chain program
+└── apps/
+     └── web/               # Next.js + Tailwind CSS frontend
 ```
 
 ## Installation & Setup
