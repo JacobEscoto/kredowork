@@ -4,6 +4,7 @@ use anchor_lang::system_program::{self, Transfer};
 use crate::constants::*;
 use crate::state::*;
 use crate::BountyError;
+use crate::instructions::reputation::record_bounty_completed;
 
 pub fn handler(ctx: Context<FinalizePayout>, bounty_id: u64) -> Result<()> {
     let workspace = &ctx.accounts.workspace;
@@ -84,6 +85,10 @@ pub fn handler(ctx: Context<FinalizePayout>, bounty_id: u64) -> Result<()> {
     bounty.status = BountyStatus::Completed;
     bounty.window_ends_at_ts = None;
 
+    if let Some(ref mut reputation) = ctx.accounts.contributor_reputation {
+        record_bounty_completed(reputation, payout_amount);
+    }
+
     Ok(())
 }
 
@@ -123,6 +128,15 @@ pub struct FinalizePayout<'info> {
     /// CHECK: Validated against `bounty.claimant` in the instruction.
     #[account(mut)]
     pub contributor: UncheckedAccount<'info>,
+
+    /// Contributor reputation profile (optional): validated against
+    /// `[REPUTATION_SEED, contributor.key()]` only if `Some` is provided.
+    #[account(
+        mut,
+        seeds = [REPUTATION_SEED, contributor.key().as_ref()],
+        bump
+    )]
+    pub contributor_reputation: Option<Account<'info, ReputationProfile>>,
 
     /// CHECK: Validated against `workspace.authority` to receive the protocol commission.
     #[account(

@@ -7,6 +7,7 @@ use crate::instructions::dispute::{
     calculate_bps_amount, checked_add_amount, checked_sub_amount, require_bounty_id,
     require_bounty_status, require_dispute_status, require_not_paused, split_dispute_bond,
 };
+use crate::instructions::reputation::record_dispute_outcome;
 use crate::state::*;
 
 pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64) -> Result<()> {
@@ -107,6 +108,45 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
         .rejected_claimant
         .ok_or(BountyError::InvalidClaimant)?;
     let reward = bounty.reward_amount;
+
+    // Validate optional reputation profiles against their PDAs when `Some` is provided.
+    if let Some(ref winner_rep) = ctx.accounts.winner_reputation {
+        let expected_winner = Pubkey::find_program_address(
+            &[REPUTATION_SEED, ctx.accounts.winner.key().as_ref()],
+            &crate::ID,
+        )
+        .0;
+        require!(
+            winner_rep.key() == expected_winner,
+            BountyError::InvalidClaimant
+        );
+    }
+    if let Some(ref loser_rep) = ctx.accounts.loser_reputation {
+        let expected_loser = Pubkey::find_program_address(
+            &[REPUTATION_SEED, ctx.accounts.loser.key().as_ref()],
+            &crate::ID,
+        )
+        .0;
+        require!(
+            loser_rep.key() == expected_loser,
+            BountyError::InvalidClaimant
+        );
+    }
+    if let Some(ref reviewer_rep) = ctx.accounts.reviewer_reputation {
+        let reviewer_key = bounty
+            .rejected_by
+            .ok_or(BountyError::InvalidClaimant)?;
+        let expected_reviewer = Pubkey::find_program_address(
+            &[REPUTATION_SEED, reviewer_key.as_ref()],
+            &crate::ID,
+        )
+        .0;
+        require!(
+            reviewer_rep.key() == expected_reviewer,
+            BountyError::InvalidClaimant
+        );
+    }
+
     let bounty_key = bounty.key();
     let vault_bump = bounty.vault_bump;
     let bounty_vault_seeds: &[&[&[u8]]] = &[&[VAULT_SEED, bounty_key.as_ref(), &[vault_bump]]];
@@ -141,6 +181,15 @@ pub fn handler<'info>(ctx: Context<'info, ResolveDispute<'info>>, bounty_id: u64
                     ),
                     fee_amount,
                 )?;
+            }
+
+            // Update reputation profiles for parties involved in the dispute.
+            if let (Some(winner_rep), Some(loser_rep)) = (
+                &mut ctx.accounts.winner_reputation,
+                &mut ctx.accounts.loser_reputation,
+            ) {
+                let reviewer_rep = ctx.accounts.reviewer_reputation.as_mut();
+                record_dispute_outcome(winner_rep, loser_rep, reviewer_rep, challenger_won, Some(payout));
             }
         } else {
             system_program::transfer(
@@ -249,4 +298,24 @@ pub struct ResolveDispute<'info> {
     pub caller: Signer<'info>,
 
     pub system_program: Program<'info, System>,
+
+    /// Winner reputation profile (optional): validated against `[REPUTATION_SEED, winner.key()]` in the handler.
+    #[account(
+        mut,
+        seeds = [REPUTATION_SEED, winner.key().as_ref()],
+        bump
+    )]
+    pub winner_reputation: Option<Account<'info, ReputationProfile>>,
+
+    /// Loser reputation profile (optional): validated against `[REPUTATION_SEED, loser.key()]` in the handler.
+    #[account(
+        mut,
+        seeds = [REPUTATION_SEED, loser.key().as_ref()],
+        bump
+    )]
+    pub loser_reputation: Option<Account<'info, ReputationProfile>>,
+
+    /// Reviewer reputation profile who rejected the work (optional): validated against
+    /// `[REPUTATION_SEED, bounty.rejected_by()]` in the handler.
+    pub reviewer_reputation: Option<Account<'info, ReputationProfile>>,
 }

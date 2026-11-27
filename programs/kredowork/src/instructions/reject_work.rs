@@ -2,6 +2,7 @@ use crate::constants::*;
 use crate::state::*;
 use crate::BountyError;
 use anchor_lang::prelude::*;
+use crate::instructions::reputation::record_bounty_rejected;
 
 /// A registered reviewer rejects a submitted work, resetting the bounty to `Rejected`
 /// so that another contributor can claim it (up to `max_submission_attempts`).
@@ -40,6 +41,22 @@ pub fn handler(ctx: Context<RejectWork>, bounty_id: u64) -> Result<()> {
 
     bounty.rejected_claimant = Some(claimant);
     bounty.rejected_by = Some(reviewer_key);
+
+    if let Some(ref reputation) = ctx.accounts.contributor_reputation {
+        let expected_reputation = Pubkey::find_program_address(
+            &[REPUTATION_SEED, claimant.as_ref()],
+            &crate::ID,
+        )
+        .0;
+        require!(
+            reputation.key() == expected_reputation,
+            BountyError::InvalidClaimant
+        );
+    }
+
+    if let Some(ref mut reputation) = ctx.accounts.contributor_reputation {
+        record_bounty_rejected(reputation);
+    }
 
     bounty.status = BountyStatus::Rejected;
     bounty.submission_attempts = bounty
@@ -82,4 +99,8 @@ pub struct RejectWork<'info> {
     pub bounty: Account<'info, BountyAccount>,
 
     pub reviewer: Signer<'info>,
+
+    /// Rejected claimant reputation profile (optional): if `Some` is provided,
+    /// validates that its address matches the PDA `[REPUTATION_SEED, claimant]`.
+    pub contributor_reputation: Option<Account<'info, ReputationProfile>>,
 }

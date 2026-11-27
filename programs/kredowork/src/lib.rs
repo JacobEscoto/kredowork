@@ -21,6 +21,12 @@ pub mod kredowork {
         instructions::initialize_workspace::handler(ctx, params)
     }
 
+    pub fn initialize_reputation<'info>(
+        ctx: Context<'info, InitializeReputation<'info>>,
+    ) -> Result<()> {
+        instructions::initialize_reputation::handler(ctx)
+    }
+
     pub fn create_bounty(
         ctx: Context<CreateBounty>,
         reward_amount: u64,
