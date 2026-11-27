@@ -1,0 +1,2386 @@
+{
+  "address": "2xudVYfkKXUSF5vdbhgXpV3bG8m479iE2xG2EyLi8o3j",
+  "metadata": {
+    "name": "kredowork",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "approve_work",
+      "discriminator": [
+        181,
+        118,
+        45,
+        143,
+        204,
+        88,
+        237,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reviewer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_bounty",
+      "discriminator": [
+        79,
+        65,
+        107,
+        143,
+        128,
+        165,
+        135,
+        46
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "challenge_bounty",
+      "discriminator": [
+        91,
+        37,
+        85,
+        217,
+        178,
+        9,
+        202,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dispute"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenger",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "respondent"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        },
+        {
+          "name": "challenge_evidence_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_bounty",
+      "discriminator": [
+        122,
+        90,
+        14,
+        143,
+        8,
+        125,
+        200,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.bounty_count",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "transfer."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "reward_amount",
+          "type": "u64"
+        },
+        {
+          "name": "spec_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "deadline_ts",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "finalize_payout",
+      "discriminator": [
+        80,
+        105,
+        227,
+        22,
+        73,
+        169,
+        249,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "contributor",
+          "writable": true
+        },
+        {
+          "name": "contributor_reputation",
+          "docs": [
+            "Contributor reputation profile (optional): validated against",
+            "`[REPUTATION_SEED, contributor.key()]` only if `Some` is provided."
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_reputation",
+      "discriminator": [
+        150,
+        240,
+        109,
+        53,
+        147,
+        42,
+        152,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_workspace",
+      "discriminator": [
+        254,
+        175,
+        175,
+        109,
+        133,
+        88,
+        204,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "params.workspace_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "WorkspaceParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reclaim_expired",
+      "discriminator": [
+        125,
+        185,
+        48,
+        75,
+        0,
+        71,
+        93,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor",
+          "writable": true,
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "reject_work",
+      "discriminator": [
+        129,
+        238,
+        59,
+        133,
+        63,
+        148,
+        130,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reviewer",
+          "signer": true
+        },
+        {
+          "name": "contributor_reputation",
+          "docs": [
+            "Rejected claimant reputation profile (optional): if `Some` is provided,",
+            "validates that its address matches the PDA `[REPUTATION_SEED, claimant]`."
+          ],
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "resolve_dispute",
+      "discriminator": [
+        231,
+        6,
+        202,
+        6,
+        96,
+        103,
+        12,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          },
+          "relations": [
+            "dispute"
+          ]
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bounty_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dispute"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sponsor",
+          "writable": true,
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "winner",
+          "writable": true
+        },
+        {
+          "name": "loser"
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "winner_reputation",
+          "docs": [
+            "Winner reputation profile (optional): validated against `[REPUTATION_SEED, winner.key()]` in the handler."
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "winner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "loser_reputation",
+          "docs": [
+            "Loser reputation profile (optional): validated against `[REPUTATION_SEED, loser.key()]` in the handler."
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "loser"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reviewer_reputation",
+          "docs": [
+            "Reviewer reputation profile who rejected the work (optional): validated against",
+            "`[REPUTATION_SEED, bounty.rejected_by()]` in the handler."
+          ],
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "workspace"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "is_paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "submit_defense",
+      "discriminator": [
+        17,
+        157,
+        193,
+        70,
+        166,
+        240,
+        78,
+        78
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          },
+          "relations": [
+            "dispute"
+          ]
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dispute_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "dispute"
+              }
+            ]
+          }
+        },
+        {
+          "name": "respondent",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "dispute"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        },
+        {
+          "name": "defense_evidence_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "submit_work",
+      "discriminator": [
+        158,
+        80,
+        101,
+        51,
+        114,
+        130,
+        101,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "contributor",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        },
+        {
+          "name": "delivery_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_workspace",
+      "discriminator": [
+        2,
+        92,
+        107,
+        205,
+        246,
+        15,
+        162,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "workspace"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateWorkspaceParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "vote_dispute",
+      "discriminator": [
+        23,
+        190,
+        211,
+        170,
+        65,
+        223,
+        4,
+        243
+      ],
+      "accounts": [
+        {
+          "name": "workspace",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  111,
+                  114,
+                  107,
+                  115,
+                  112,
+                  97,
+                  99,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace.authority",
+                "account": "WorkspaceConfig"
+              },
+              {
+                "kind": "account",
+                "path": "workspace.workspace_id",
+                "account": "WorkspaceConfig"
+              }
+            ]
+          },
+          "relations": [
+            "bounty"
+          ]
+        },
+        {
+          "name": "bounty",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  117,
+                  110,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "workspace"
+              },
+              {
+                "kind": "arg",
+                "path": "bounty_id"
+              }
+            ]
+          },
+          "relations": [
+            "dispute"
+          ]
+        },
+        {
+          "name": "dispute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  112,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bounty"
+              }
+            ]
+          }
+        },
+        {
+          "name": "arbiter",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_id",
+          "type": "u64"
+        },
+        {
+          "name": "side",
+          "type": {
+            "defined": {
+              "name": "DisputeVoteSide"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "BountyAccount",
+      "discriminator": [
+        79,
+        173,
+        237,
+        26,
+        118,
+        105,
+        127,
+        194
+      ]
+    },
+    {
+      "name": "DisputeAccount",
+      "discriminator": [
+        237,
+        70,
+        91,
+        63,
+        81,
+        74,
+        45,
+        43
+      ]
+    },
+    {
+      "name": "ReputationProfile",
+      "discriminator": [
+        73,
+        32,
+        193,
+        201,
+        177,
+        91,
+        104,
+        136
+      ]
+    },
+    {
+      "name": "WorkspaceConfig",
+      "discriminator": [
+        183,
+        103,
+        70,
+        12,
+        5,
+        151,
+        35,
+        167
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "WorkspacePaused",
+      "msg": "The workspace is currently paused."
+    },
+    {
+      "code": 6001,
+      "name": "InvalidRewardAmount",
+      "msg": "The reward amount must be greater than zero."
+    },
+    {
+      "code": 6002,
+      "name": "InvalidDeadline",
+      "msg": "The deadline must be in the future."
+    },
+    {
+      "code": 6003,
+      "name": "InvalidStateTransition",
+      "msg": "State transition not permitted for the current state."
+    },
+    {
+      "code": 6004,
+      "name": "UnauthorizedReviewer",
+      "msg": "The signature does not belong to an authorized reviewer for the space."
+    },
+    {
+      "code": 6005,
+      "name": "UnauthorizedArbiter",
+      "msg": "The signature does not belong to an arbitrator assigned to the dispute."
+    },
+    {
+      "code": 6006,
+      "name": "TooManyReviewers",
+      "msg": "There are too many reviewers; only 8 are permitted."
+    },
+    {
+      "code": 6007,
+      "name": "SelfApprovalNotAllowed",
+      "msg": "It is not permitted to approve or charge for one's own task, or one that has been self-approved."
+    },
+    {
+      "code": 6008,
+      "name": "QuorumNotReached",
+      "msg": "The minimum required quorum has not been reached."
+    },
+    {
+      "code": 6009,
+      "name": "WindowNotExpired",
+      "msg": "The time window has not yet expired."
+    },
+    {
+      "code": 6010,
+      "name": "WindowExpired",
+      "msg": "The time window has expired."
+    },
+    {
+      "code": 6011,
+      "name": "InsufficientBond",
+      "msg": "The bond amount is insufficient."
+    },
+    {
+      "code": 6012,
+      "name": "DuplicateAction",
+      "msg": "A duplicate vote or action has already been recorded."
+    },
+    {
+      "code": 6013,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow in the calculation of funds or score"
+    },
+    {
+      "code": 6014,
+      "name": "DuplicateReviewer",
+      "msg": "Duplicate reviewer detected in the reviewer list."
+    },
+    {
+      "code": 6015,
+      "name": "InvalidQuorumThreshold",
+      "msg": "The quorum threshold must be greater than zero."
+    },
+    {
+      "code": 6016,
+      "name": "QuorumExceedsReviewers",
+      "msg": "The quorum threshold cannot exceed the number of reviewers."
+    },
+    {
+      "code": 6017,
+      "name": "InvalidMaxSubmissionAttempts",
+      "msg": "The maximum submission attempts must be greater than zero."
+    },
+    {
+      "code": 6018,
+      "name": "InvalidWindowDuration",
+      "msg": "The window duration must be greater than zero."
+    },
+    {
+      "code": 6019,
+      "name": "InvalidClaimant",
+      "msg": "The provided contributor does not match the bounty claimant."
+    },
+    {
+      "code": 6020,
+      "name": "BountyIdMismatch",
+      "msg": "The provided bounty ID does not match the account bounty ID."
+    },
+    {
+      "code": 6021,
+      "name": "InvalidBps",
+      "msg": "The fee or bond basis points cannot exceed the maximum of 10,000."
+    },
+    {
+      "code": 6022,
+      "name": "MaxAttemptsReached",
+      "msg": "The maximum submission attempts has been reached."
+    },
+    {
+      "code": 6023,
+      "name": "InvalidChallenger",
+      "msg": "The challenger and respondent do not form a valid dispute pair."
+    }
+  ],
+  "types": [
+    {
+      "name": "BountyAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace",
+            "type": "pubkey"
+          },
+          {
+            "name": "sponsor",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimant",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "rejected_claimant",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "rejected_by",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "bounty_id",
+            "type": "u64"
+          },
+          {
+            "name": "reward_amount",
+            "type": "u64"
+          },
+          {
+            "name": "locked_bond",
+            "type": "u64"
+          },
+          {
+            "name": "spec_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "delivery_hash",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BountyStatus"
+              }
+            }
+          },
+          {
+            "name": "deadline_ts",
+            "type": "i64"
+          },
+          {
+            "name": "submitted_at_ts",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "window_ends_at_ts",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "approvals_count",
+            "type": "u8"
+          },
+          {
+            "name": "approvals_mask",
+            "type": "u8"
+          },
+          {
+            "name": "approvals_epoch",
+            "type": "u16"
+          },
+          {
+            "name": "submission_attempts",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BountyStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Claimed"
+          },
+          {
+            "name": "Submitted"
+          },
+          {
+            "name": "PreApproved"
+          },
+          {
+            "name": "Rejected"
+          },
+          {
+            "name": "Disputed"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Expired"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DisputeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bounty",
+            "type": "pubkey"
+          },
+          {
+            "name": "challenger",
+            "type": "pubkey"
+          },
+          {
+            "name": "respondent",
+            "type": "pubkey"
+          },
+          {
+            "name": "challenge_bond",
+            "type": "u64"
+          },
+          {
+            "name": "defense_bond",
+            "type": "u64"
+          },
+          {
+            "name": "challenge_evidence_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "defense_evidence_hash",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "arbiters",
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "votes_for_challenger",
+            "type": "u8"
+          },
+          {
+            "name": "votes_for_respondent",
+            "type": "u8"
+          },
+          {
+            "name": "votes_mask",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "DisputeStatus"
+              }
+            }
+          },
+          {
+            "name": "deadline_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DisputeStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "ResolvedForChallenger"
+          },
+          {
+            "name": "ResolvedForRespondent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DisputeVoteSide",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Challenger"
+          },
+          {
+            "name": "Respondent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReputationProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "bounties_completed",
+            "type": "u64"
+          },
+          {
+            "name": "bounties_rejected",
+            "type": "u64"
+          },
+          {
+            "name": "total_earned",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
+            "type": "u64"
+          },
+          {
+            "name": "overturned_reviews",
+            "type": "u64"
+          },
+          {
+            "name": "reputation_score",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateWorkspaceParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "challenge_window_secs",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "review_timeout_secs",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "reviewers",
+            "type": {
+              "option": {
+                "vec": "pubkey"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WorkspaceConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "workspace_id",
+            "type": "u64"
+          },
+          {
+            "name": "bounty_count",
+            "type": "u64"
+          },
+          {
+            "name": "quorum_threshold",
+            "type": "u8"
+          },
+          {
+            "name": "max_submission_attempts",
+            "type": "u8"
+          },
+          {
+            "name": "challenge_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "review_timeout_secs",
+            "type": "i64"
+          },
+          {
+            "name": "fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "bond_bps",
+            "type": "u16"
+          },
+          {
+            "name": "reviewers_epoch",
+            "type": "u16"
+          },
+          {
+            "name": "reviewers",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "is_paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WorkspaceParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "workspace_id",
+            "type": "u64"
+          },
+          {
+            "name": "quorum_threshold",
+            "type": "u8"
+          },
+          {
+            "name": "max_submission_attempts",
+            "type": "u8"
+          },
+          {
+            "name": "challenge_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "review_timeout_secs",
+            "type": "i64"
+          },
+          {
+            "name": "fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "bond_bps",
+            "type": "u16"
+          },
+          {
+            "name": "reviewers",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "BOUNTY_SEED",
+      "type": "bytes",
+      "value": "[98, 111, 117, 110, 116, 121]"
+    },
+    {
+      "name": "DISPUTE_SEED",
+      "type": "bytes",
+      "value": "[100, 105, 115, 112, 117, 116, 101]"
+    },
+    {
+      "name": "DISPUTE_VAULT_SEED",
+      "type": "bytes",
+      "value": "[100, 105, 115, 112, 117, 116, 101, 95, 118, 97, 117, 108, 116]"
+    },
+    {
+      "name": "REPUTATION_SEED",
+      "type": "bytes",
+      "value": "[114, 101, 112, 117, 116, 97, 116, 105, 111, 110]"
+    },
+    {
+      "name": "VAULT_SEED",
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    },
+    {
+      "name": "WORKSPACE_SEED",
+      "type": "bytes",
+      "value": "[119, 111, 114, 107, 115, 112, 97, 99, 101]"
+    }
+  ]
+}
