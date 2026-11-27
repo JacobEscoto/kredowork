@@ -1,13 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Rubik } from 'next/font/google'
 import './globals.css'
-
-const rubik = Rubik({ subsets: ['latin'], variable: '--font-rubik', display: 'swap' })
+import { LanguageProvider } from '@/components/language-provider'
 
 export const metadata: Metadata = {
-  title: 'KredoWork — Open bounties for Solana builders',
-  description: 'Coordinate, verify, and reward infrastructure work on Solana with transparent, escrow-backed bounties.',
+  title: 'KredoWork — Trabajo abierto, recompensas verificables',
+  description: 'Conecta equipos de infraestructura con quienes hacen que Solana funcione. Explora KredoWork en Solana devnet.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -39,9 +37,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${rubik.variable} antialiased`}>
-        {children}
+    <html lang="es">
+      <body className="antialiased">
+        <LanguageProvider>{children}</LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

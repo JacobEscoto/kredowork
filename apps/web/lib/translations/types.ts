@@ -1,0 +1,164 @@
+export type Locale = 'en' | 'es'
+
+export type Translations = {
+  common: {
+    appName: string
+    changeLanguage: string
+    navAria: string
+    solanaDevnet: string
+    devnetNote: string
+    backHome: string
+    openMenu: string
+    closeMenu: string
+    builtOnSolana: string
+    openCoordination: string
+    builtForMaintainers: string
+    brandHome: string
+  }
+  languages: {
+    english: string
+    spanish: string
+  }
+  nav: {
+    about: string
+    bounties: string
+    register: string
+    home: string
+  }
+  home: {
+    kicker: string
+    workOpen: string
+    deserves: string
+    rewards: string
+    reward: string
+    workflowAria: string
+    bottomAria: string
+    lede: string
+    createAccount: string
+    learnMore: string
+    devnetTrust: string
+    bottomLabel: string
+    bottomStrong: string
+    bottomHowItWorks: string
+    bottomOpenTasks: string
+    trustCaption: string
+  }
+  bounties: {
+    kicker: string
+    title: string
+    updated: string
+    filterLabel: string
+    searchAria: string
+    searchPlaceholder: string
+    listHeadTask: string
+    listHeadEscrow: string
+    listHeadDeadline: string
+    listHeadApproval: string
+    listHeadSpec: string
+    vaultLocked: string
+    daysRemaining: string
+    finished: string
+    copyHash: string
+    viewBounty: string
+    emptyTitleQuery: string
+    emptyNone: string
+    emptySubQuery: string
+    emptyDisputed: string
+    emptyDefault: string
+    emptyButton: string
+    showing: string
+    tasks: string
+    viewAllTasks: string
+    proofOpen: string
+    proofTasks: string
+    proofNoMasterKey: string
+    proofEscrow: string
+    proofAria: string
+    footerBuilt: string
+    status: {
+      OPEN: string
+      CLAIMED: string
+      SUBMITTED: string
+      PRE_APPROVED: string
+      COMPLETED: string
+      EXPIRED: string
+      DISPUTED: string
+    }
+  }
+  about: {
+    kicker: string
+    clearerWay: string
+    toBuild: string
+    together: string
+    intro: string
+    step1Title: string
+    step1Body: string
+    step2Title: string
+    step2Body: string
+    step3Title: string
+    step3Body: string
+    transparent: string
+    guaranteesKicker: string
+    guaranteesTitle: string
+    guaranteesSubtitle: string
+    guarantee1Title: string
+    guarantee1Body: string
+    guarantee2Title: string
+    guarantee2Body: string
+    guarantee3Title: string
+    guarantee3Body: string
+    guarantee4Title: string
+    guarantee4Body: string
+    flowKicker: string
+    flowTitle: string
+    flowItem1: string
+    flowItem2: string
+    flowItem3: string
+    flowItem4: string
+    calloutLabel: string
+    calloutTitle1: string
+    calloutTitle2: string
+    createAccount: string
+  }
+  account: {
+    metaTitle: string
+    metaDescription: string
+    kicker: string
+    welcome: string
+    toKredoWork: string
+    lede: string
+    githubAccount: string
+    active: string
+    goToKredoWork: string
+  }
+  register: {
+    kicker: string
+    enter: string
+    conversation: string
+    intro: string
+    networkNote: string
+    createAccount: string
+    chooseMethod: string
+    connectWallet: string
+    solanaDevnet: string
+    continueGitHub: string
+    githubSub: string
+    oauthNote: string
+    legal: string
+  }
+  wallet: {
+    pickerAria: string
+    noAccount: string
+    connectFailed: string
+    noCompatible: string
+    connecting: string
+    connectWallet: string
+    devnetBalance: string
+  }
+  auth: {
+    githubSignInFailed: string
+    signOutFailed: string
+    signingOut: string
+    signOut: string
+  }
+}
