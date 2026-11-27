@@ -96,7 +96,13 @@ export default function AccountPage() {
                 src={user.avatarUrl}
                 alt=""
                 referrerPolicy="no-referrer"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                }}
+                className="rounded-full"
               />
             ) : (
               "GH"

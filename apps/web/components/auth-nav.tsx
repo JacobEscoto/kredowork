@@ -78,6 +78,7 @@ export default function AuthNav() {
           referrerPolicy="no-referrer"
           width={36}
           height={36}
+          className="rounded-full"
         />
       ) : (
         <UserRound size={18} aria-hidden="true" />
