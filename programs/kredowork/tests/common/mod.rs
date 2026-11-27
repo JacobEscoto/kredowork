@@ -279,6 +279,7 @@ pub fn build_finalize_payout_ix(
         contributor,
         fee_recipient,
         caller,
+        contributor_reputation: None,
         system_program: anchor_lang::system_program::ID,
     }
     .to_account_metas(None);
@@ -354,6 +355,7 @@ pub fn build_reject_work_ix(
         workspace: workspace_pda,
         bounty: bounty_pda,
         reviewer,
+        contributor_reputation: None,
     }
     .to_account_metas(None);
 
@@ -567,6 +569,9 @@ pub fn build_resolve_dispute_ix(
         sponsor,
         winner,
         loser,
+        winner_reputation: None,
+        loser_reputation: None,
+        reviewer_reputation: None,
         fee_recipient,
         caller,
         system_program: anchor_lang::system_program::ID,
