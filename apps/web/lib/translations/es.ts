@@ -10,6 +10,7 @@ export const es = {
     backHome: "Volver al inicio",
     openMenu: "Abrir menú",
     closeMenu: "Cerrar menú",
+    footerNavAria: "Navegación del pie de página",
     builtOnSolana: "Construido en Solana · Devnet",
     openCoordination: "Coordinación abierta. Recompensas verificables.",
     builtForMaintainers: "Construido para quienes mantienen Solana en marcha.",
@@ -23,6 +24,7 @@ export const es = {
     about: "Cómo funciona",
     bounties: "Explorar trabajo",
     register: "Crear cuenta",
+    accountAccess: "Entrar / Registrarse",
     home: "Inicio",
   },
   home: {
@@ -43,6 +45,9 @@ export const es = {
     bottomHowItWorks: "Así funciona",
     bottomOpenTasks: "Ver tareas abiertas",
     trustCaption: "Una contribución a la vez.",
+    taskScopeLabel: "alcance definido",
+    reviewByCommunity: "revisión comunitaria",
+    escrowStatus: "en escrow on-chain",
   },
   bounties: {
     kicker: "El mercado",
@@ -94,19 +99,19 @@ export const es = {
     together: "juntos.",
     intro:
       "KredoWork convierte trabajo de infraestructura en tareas abiertas, revisables y recompensadas. Menos fricción entre quienes necesitan construir y quienes pueden hacerlo.",
-    step1Title: "Elige un trabajo",
-    step1Body:
-      "Los equipos publican tareas con objetivos, criterios de aceptación y una recompensa definidos desde el inicio.",
-    step2Title: "Revisión en ventana acotada",
+    step1Title: "Elige una tarea",
+    step1Body: "Alcance, criterios y recompensa quedan claros desde el inicio.",
+    step2Title: "Revisa la entrega",
     step2Body:
-      "Las entregas se verifican contra criterios de aceptación fijos durante una ventana de revisión con tiempo límite, con los fondos en una bóveda dedicada a la tarea.",
-    step3Title: "Liquidación y reputación",
+      "La revisión tiene un plazo claro y los fondos quedan protegidos en escrow.",
+    step3Title: "Libera el pago",
     step3Body:
-      "El pago se libera una vez la entrega cumple los criterios acordados, y tanto el contribuyente como el revisor construyen reputación verificable.",
+      "Al aprobarse, se paga la tarea y se registra la reputación verificable.",
     transparent: "Transparente por diseño",
     guaranteesKicker: "Garantías del protocolo",
     guaranteesTitle: "Construido para que el trabajo se pague",
-    guaranteesSubtitle: "KredoWork aplica estas reglas en cadena, no por promesa.",
+    guaranteesSubtitle:
+      "KredoWork aplica estas reglas en cadena, no por promesa.",
     guarantee1Title: "Sin llave maestra",
     guarantee1Body:
       "Ninguna parte puede congelar o redirigir los fondos. Los pagos siguen la máquina de estados, no un custodio.",
@@ -153,6 +158,7 @@ export const es = {
     connectWallet: "Conectar wallet",
     solanaDevnet: "Solana · Devnet",
     continueGitHub: "Continuar con GitHub",
+    connectingGitHub: "Conectando con GitHub…",
     githubSub: "Iniciar sesión o crear cuenta",
     oauthNote:
       "Conecta tu cuenta de GitHub para iniciar sesión o crear una cuenta.",
@@ -168,11 +174,14 @@ export const es = {
       "No encontramos una wallet compatible. Instala una wallet Solana y vuelve a cargar la página.",
     connecting: "Conectando…",
     connectWallet: "Conectar wallet",
+    disconnectWallet: "Desconectar wallet",
     devnetBalance: "Balance de devnet: {{balance}} SOL",
   },
   auth: {
     githubSignInFailed:
       "No se pudo iniciar sesión con GitHub. Inténtalo de nuevo.",
+    githubProfileUnavailable:
+      "GitHub no pudo proporcionar tu perfil. Inténtalo más tarde; si persiste, revisa la configuración del proveedor OAuth.",
     signOutFailed: "No se pudo cerrar la sesión. Inténtalo de nuevo.",
     signingOut: "Cerrando sesión…",
     signOut: "Cerrar sesión",

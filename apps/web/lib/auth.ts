@@ -1,22 +1,22 @@
-import { betterAuth } from 'better-auth'
-import { Pool } from 'pg'
+import { betterAuth } from "better-auth";
+import { Pool } from "pg";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const productionOrigins = [
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
     : []),
-]
+];
 
 const developmentOrigins = [
-  'http://localhost:3000',
+  "http://localhost:3000",
   ...(process.env.V0_RUNTIME_URL ? [process.env.V0_RUNTIME_URL] : []),
   ...(process.env.V0_DEV_APP_URL ? [process.env.V0_DEV_APP_URL] : []),
   ...(process.env.V0_BUILD_URL ? [process.env.V0_BUILD_URL] : []),
   ...(process.env.V0_SANDBOX_URL ? [process.env.V0_SANDBOX_URL] : []),
-]
+];
 
 export const auth = betterAuth({
   database: pool,
@@ -26,7 +26,7 @@ export const auth = betterAuth({
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : process.env.V0_RUNTIME_URL ?? 'http://localhost:3000'),
+        : (process.env.V0_RUNTIME_URL ?? "http://localhost:3000")),
   socialProviders: {
     github: {
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -34,19 +34,21 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins:
-    process.env.NODE_ENV === 'development' ? developmentOrigins : productionOrigins,
+    process.env.NODE_ENV === "development"
+      ? developmentOrigins
+      : productionOrigins,
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
   },
-  ...(process.env.NODE_ENV === 'development'
+  ...(process.env.NODE_ENV === "development"
     ? {
         advanced: {
           defaultCookieAttributes: {
-            sameSite: 'none' as const,
+            sameSite: "none" as const,
             secure: true,
           },
         },
       }
     : {}),
-})
+});

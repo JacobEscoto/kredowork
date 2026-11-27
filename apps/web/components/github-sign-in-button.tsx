@@ -1,52 +1,82 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ArrowRight, LoaderCircle } from 'lucide-react'
-import { authClient } from '@/lib/auth-client'
-import { useTranslation } from '@/components/language-provider'
+import { useState } from "react";
+import { siGithub } from "simple-icons";
+import { LoaderCircle } from "lucide-react";
+import { useTranslation } from "@/components/language-provider";
+import { supabaseBrowser } from "@/lib/supabase/client";
+
+export async function signInWithGitHub(nextPath = "/bounties") {
+  const origin = window.location.origin;
+  const redirectUrl = new URL(
+    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
+      `${origin}/auth/callback`,
+  );
+  redirectUrl.searchParams.set("next", nextPath);
+  const redirectTo = redirectUrl.toString();
+
+  const { error } = await supabaseBrowser.auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo,
+      scopes: "read:user user:email",
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+}
 
 export default function GitHubSignInButton() {
-  const { translate: t } = useTranslation()
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState('')
+  const { translate: t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  async function signIn() {
-    setPending(true)
-    setError('')
+  async function handleSignIn() {
+    setIsLoading(true);
+    setHasError(false);
 
     try {
-      const result = await authClient.signIn.social({
-        provider: 'github',
-        callbackURL: '/account',
-      })
-
-      if (result.error) {
-        setError(t('auth.githubSignInFailed'))
-        setPending(false)
-      }
+      await signInWithGitHub();
     } catch {
-      setError(t('auth.githubSignInFailed'))
-      setPending(false)
+      setHasError(true);
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="github-auth-action">
+    <>
       <button
-        className="register-method social-method github-active"
+        className="register-method social-method github-active github-auth-action"
         type="button"
-        onClick={() => void signIn()}
-        disabled={pending}
-        aria-busy={pending}
+        onClick={handleSignIn}
+        disabled={isLoading}
+        aria-busy={isLoading}
       >
-        <span className="method-icon github-icon" aria-hidden="true">GH</span>
-        <span className="method-copy">
-          <strong>{t('register.continueGitHub')}</strong>
-          <span>{t('register.githubSub')}</span>
+        <span className="method-icon github-icon" aria-hidden="true">
+          {isLoading ? (
+            <LoaderCircle className="github-spinner" />
+          ) : (
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d={siGithub.path} />
+            </svg>
+          )}
         </span>
-        {pending ? <LoaderCircle className="github-spinner" size={16} aria-hidden="true" /> : <ArrowRight size={15} aria-hidden="true" />}
+        <span className="method-copy">
+          <strong>
+            {isLoading
+              ? t("register.connectingGitHub")
+              : t("register.continueGitHub")}
+          </strong>
+          <span>{t("register.githubSub")}</span>
+        </span>
       </button>
-      {error && <p className="github-auth-error" role="alert">{error}</p>}
-    </div>
-  )
+      {hasError && (
+        <p className="github-auth-error" role="alert">
+          {t("auth.githubSignInFailed")}
+        </p>
+      )}
+    </>
+  );
 }

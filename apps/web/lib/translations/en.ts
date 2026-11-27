@@ -10,6 +10,7 @@ export const en = {
     backHome: "Back home",
     openMenu: "Open menu",
     closeMenu: "Close menu",
+    footerNavAria: "Footer navigation",
     builtOnSolana: "Built on Solana · Devnet",
     openCoordination: "Open coordination. Verifiable rewards.",
     builtForMaintainers: "Built for those who keep Solana running.",
@@ -23,6 +24,7 @@ export const en = {
     about: "How it works",
     bounties: "Explore work",
     register: "Create account",
+    accountAccess: "Sign in / Register",
     home: "Home",
   },
   home: {
@@ -42,6 +44,9 @@ export const en = {
     bottomHowItWorks: "How it works",
     bottomOpenTasks: "View open tasks",
     trustCaption: "One contribution at a time.",
+    taskScopeLabel: "defined scope",
+    reviewByCommunity: "community review",
+    escrowStatus: "in on-chain escrow",
   },
   bounties: {
     kicker: "The market",
@@ -92,19 +97,19 @@ export const en = {
     together: "together.",
     intro:
       "KredoWork turns infrastructure work into open, reviewable, and rewarded tasks. Less friction between those who need to build and those who can.",
-    step1Title: "Choose a job",
+    step1Title: "Choose a task",
     step1Body:
-      "Teams post tasks with defined objectives, acceptance criteria, and a reward from the start.",
-    step2Title: "Review within a bounded window",
+      "Scope, acceptance criteria, and reward are clear before work begins.",
+    step2Title: "Review the delivery",
     step2Body:
-      "Deliverables are checked against fixed acceptance criteria during a time-bounded review window, with funds held in a dedicated task vault.",
-    step3Title: "Settle and build reputation",
-    step3Body:
-      "Payment is released once delivery meets the agreed criteria, and both contributor and reviewer earn verifiable reputation.",
+      "Review runs within a fixed window, with funds secured in escrow.",
+    step3Title: "Release payment",
+    step3Body: "Approval pays the task and records verifiable reputation.",
     transparent: "Transparent by design",
     guaranteesKicker: "Protocol guarantees",
     guaranteesTitle: "Built so work gets paid",
-    guaranteesSubtitle: "KredoWork enforces these rules on-chain, not by promise.",
+    guaranteesSubtitle:
+      "KredoWork enforces these rules on-chain, not by promise.",
     guarantee1Title: "No master key",
     guarantee1Body:
       "No single party can freeze or redirect funds. Payouts follow the state machine, not a custodian.",
@@ -151,6 +156,7 @@ export const en = {
     connectWallet: "Connect wallet",
     solanaDevnet: "Solana · Devnet",
     continueGitHub: "Continue with GitHub",
+    connectingGitHub: "Connecting to GitHub…",
     githubSub: "Sign in or create account",
     oauthNote: "Connect your GitHub account to sign in or create an account.",
     legal:
@@ -164,10 +170,13 @@ export const en = {
       "No compatible wallet found. Install a Solana wallet and reload the page.",
     connecting: "Connecting…",
     connectWallet: "Connect wallet",
+    disconnectWallet: "Disconnect wallet",
     devnetBalance: "Devnet balance: {{balance}} SOL",
   },
   auth: {
     githubSignInFailed: "Could not sign in with GitHub. Try again.",
+    githubProfileUnavailable:
+      "GitHub could not provide your profile. Try again later; if it continues, check the GitHub OAuth provider setup.",
     signOutFailed: "Could not sign out. Try again.",
     signingOut: "Signing out…",
     signOut: "Sign out",
