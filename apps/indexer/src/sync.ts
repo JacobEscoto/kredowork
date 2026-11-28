@@ -16,6 +16,7 @@ import {
   mapDisputeResolution,
 } from "./decoder.js";
 
+const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
 const processedSignatures = new Set<string>();
 
 function extractEventPdas(
@@ -55,6 +56,8 @@ export async function processTransaction(
   processedSignatures.add(sigStr);
   if (tx.meta?.err) return;
 
+  const blockTime = tx.blockTime ? Number(tx.blockTime) : null;
+
   const staticKeys = tx.transaction.message.accountKeys.map((k) => address(k));
   const loadedWritable = (tx.meta?.loadedAddresses?.writable ?? []).map((k) =>
     address(k),
@@ -86,7 +89,7 @@ export async function processTransaction(
         tx_signature: sigStr,
         event_index: eventIndex++,
         slot: Number(tx.slot),
-        block_time: tx.blockTime ? Number(tx.blockTime) : null,
+        block_time: blockTime,
         event_name: eventName,
         workspace_pda: workspacePda,
         bounty_pda: bountyPda,
@@ -149,7 +152,14 @@ export async function processTransaction(
     await syncBounty(rpc, b.addr, b.decoded, sigStr, Number(tx.slot));
   }
   for (const d of disputes) {
-    await syncDispute(rpc, d.addr, d.decoded, sigStr, Number(tx.slot));
+    await syncDispute(
+      rpc,
+      d.addr,
+      d.decoded,
+      sigStr,
+      Number(tx.slot),
+      blockTime,
+    );
   }
   for (const r of reputations) {
     await syncReputation(r.addr, r.decoded);
@@ -163,11 +173,11 @@ async function ensureWorkspaceExists(
 ) {
   const { data } = await supabase
     .from("workspaces")
-    .select("workspace_pda")
+    .select("workspace_pda, fee_bps")
     .eq("workspace_pda", workspaceAddr)
     .maybeSingle();
 
-  if (data) return;
+  if (data) return data;
 
   const { value: info } = await rpc
     .getAccountInfo(workspaceAddr, {
@@ -176,11 +186,16 @@ async function ensureWorkspaceExists(
     })
     .send();
 
-  if (!info || info.owner !== config.programId) return;
+  if (!info || info.owner !== config.programId) return null;
   const parsed = decodeBase64Account(info.data[0]);
   if (parsed?.kind === "WorkspaceConfig") {
     await syncWorkspace(workspaceAddr, parsed.decoded, fallbackSlot);
+    return {
+      workspace_pda: workspaceAddr,
+      fee_bps: Number(parsed.decoded.fee_bps ?? 0),
+    };
   }
+  return null;
 }
 
 async function ensureBountyExists(
@@ -230,9 +245,13 @@ async function syncWorkspace(workspacePda: string, data: any, slot: number) {
       arbitrators: existing?.arbitrators?.length
         ? existing.arbitrators
         : reviewers,
+      quorum_threshold: Number(data.quorum_threshold ?? 1),
+      max_submission_attempts: Number(data.max_submission_attempts ?? 1),
+      review_timeout_secs: Number(data.review_timeout_secs ?? 0),
       fee_bps: Number(data.fee_bps ?? 0),
       challenge_bond_bps: Number(data.bond_bps ?? 0),
       optimistic_window_sec: Number(data.challenge_window_secs ?? 60),
+      is_paused: Boolean(data.is_paused),
       created_at_slot: slot,
       updated_at: new Date().toISOString(),
     },
@@ -255,7 +274,7 @@ async function syncBounty(
   slot: number,
 ) {
   const workspacePda = address(data.workspace.toBase58());
-  await ensureWorkspaceExists(rpc, workspacePda, slot);
+  const ws = await ensureWorkspaceExists(rpc, workspacePda, slot);
 
   const { data: existing } = await supabase
     .from("bounties")
@@ -269,6 +288,10 @@ async function syncBounty(
     ? Number(data.window_ends_at_ts.toString())
     : null;
 
+  const rewardLamports = BigInt(data.reward_amount.toString());
+  const feeBps = BigInt(ws?.fee_bps ?? 0);
+  const feeLamports = ((rewardLamports * feeBps) / 10_000n).toString();
+
   const { error } = await supabase.from("bounties").upsert(
     {
       bounty_pda: bountyPda,
@@ -277,8 +300,11 @@ async function syncBounty(
       creator_pubkey: data.sponsor.toBase58(),
       contributor_pubkey: data.claimant ? data.claimant.toBase58() : null,
       status,
-      reward_lamports: data.reward_amount.toString(),
-      fee_lamports: 0,
+      reward_lamports: rewardLamports.toString(),
+      fee_lamports: feeLamports,
+      approvals_count: Number(data.approvals_count ?? 0),
+      approvals_mask: Number(data.approvals_mask ?? 0),
+      submission_attempts: Number(data.submission_attempts ?? 0),
       spec_hash: bytesToHex(data.spec_hash),
       spec_title:
         existing?.spec_title ?? `Bounty #${data.bounty_id.toString()}`,
@@ -308,20 +334,32 @@ async function syncDispute(
   data: any,
   signature: string,
   slot: number,
+  blockTime: number | null,
 ) {
   const bountyPda = address(data.bounty.toBase58());
   await ensureBountyExists(rpc, bountyPda, signature, slot);
 
   const { data: existing } = await supabase
     .from("disputes")
-    .select("challenge_evidence_payload, defense_evidence_payload")
+    .select("challenge_evidence_payload, defense_evidence_payload, resolved_at")
     .eq("dispute_pda", disputePda)
     .maybeSingle();
 
   const resolution = mapDisputeResolution(data.status);
   const arbiters = Array.isArray(data.arbiters)
-    ? data.arbiters.map((p: { toBase58(): string }) => p.toBase58())
+    ? data.arbiters
+        .filter(Boolean)
+        .map((p: { toBase58(): string }) => p.toBase58())
+        .filter((addr: string) => addr !== SYSTEM_PROGRAM_ID)
     : [];
+
+  const resolvedTimestamp =
+    resolution !== "PENDING"
+      ? (existing?.resolved_at ??
+        (blockTime
+          ? new Date(blockTime * 1000).toISOString()
+          : new Date().toISOString()))
+      : null;
 
   const { error } = await supabase.from("disputes").upsert(
     {
@@ -344,7 +382,7 @@ async function syncDispute(
         votes_mask: Number(data.votes_mask ?? 0),
       },
       resolution,
-      resolved_at: resolution !== "PENDING" ? new Date().toISOString() : null,
+      resolved_at: resolvedTimestamp,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "dispute_pda" },
@@ -374,6 +412,7 @@ async function syncReputation(profilePda: string, data: any) {
       bounties_completed: Number(data.bounties_completed ?? 0),
       bounties_failed: Number(data.bounties_rejected ?? 0),
       total_earned_lamports: data.total_earned.toString(),
+      reputation_score: Number(data.reputation_score ?? 0),
       reviews_completed: 0,
       reviews_overturned: Number(data.overturned_reviews ?? 0),
       disputes_won: Number(data.disputes_won ?? 0),

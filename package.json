@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "indexer:dev": "pnpm --dir apps/indexer dev",
+    "indexer:start": "pnpm --dir apps/indexer start",
+    "indexer:typecheck": "pnpm --dir apps/indexer typecheck"
+  }
+}
