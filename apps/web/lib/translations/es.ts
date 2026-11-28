@@ -223,4 +223,13 @@ export const es = {
     signingOut: "Cerrando sesión…",
     signOut: "Cerrar sesión",
   },
+  notFound: {
+    code: "404 · Página no encontrada",
+    titleLine1: "Esta ruta",
+    titleLine2: "no existe.",
+    description:
+      "Es posible que el enlace esté desactualizado o que la tarea o espacio que buscas haya cambiado de dirección.",
+    exploreTasks: "Explorar tareas abiertas",
+    backHome: "Volver al inicio",
+  },
 } satisfies Translations;

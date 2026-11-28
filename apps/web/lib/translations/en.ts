@@ -215,4 +215,13 @@ export const en = {
     signingOut: "Signing out…",
     signOut: "Sign out",
   },
+  notFound: {
+    code: "404 · Page not found",
+    titleLine1: "This task",
+    titleLine2: "doesn't exist.",
+    description:
+      "The link may be outdated, or the task or workspace you are looking for was moved.",
+    exploreTasks: "Explore open tasks",
+    backHome: "Back home",
+  },
 } satisfies Translations;

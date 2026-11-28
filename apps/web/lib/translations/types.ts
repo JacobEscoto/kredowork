@@ -192,4 +192,12 @@ export type Translations = {
     signingOut: string;
     signOut: string;
   };
+  notFound: {
+    code: string;
+    titleLine1: string;
+    titleLine2: string;
+    description: string;
+    exploreTasks: string;
+    backHome: string;
+  };
 };
