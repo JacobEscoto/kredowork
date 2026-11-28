@@ -28,7 +28,6 @@ export type Translations = {
     home: string;
   };
   home: {
-    kicker: string;
     workOpen: string;
     deserves: string;
     rewards: string;
@@ -47,9 +46,11 @@ export type Translations = {
     taskScopeLabel: string;
     reviewByCommunity: string;
     escrowStatus: string;
+    workDefined: string;
+    fundsEscrowed: string;
+    communityReviewed: string;
   };
   bounties: {
-    kicker: string;
     title: string;
     updated: string;
     filterLabel: string;
@@ -88,10 +89,10 @@ export type Translations = {
       COMPLETED: string;
       EXPIRED: string;
       DISPUTED: string;
+      REJECTED: string;
     };
   };
   about: {
-    kicker: string;
     clearerWay: string;
     toBuild: string;
     together: string;
@@ -128,8 +129,7 @@ export type Translations = {
   account: {
     metaTitle: string;
     metaDescription: string;
-    kicker: string;
-    welcome: string;
+    profile: string;
     toKredoWork: string;
     lede: string;
     githubAccount: string;
@@ -137,7 +137,6 @@ export type Translations = {
     goToKredoWork: string;
   };
   register: {
-    kicker: string;
     enter: string;
     conversation: string;
     intro: string;
@@ -152,6 +151,12 @@ export type Translations = {
     oauthNote: string;
     legal: string;
   };
+  workspace: {
+    authorityReviewerInfo: string;
+    independentReviewers: string;
+    reviewersInvalid: string;
+    windowsInvalid: string;
+  };
   wallet: {
     pickerAria: string;
     noAccount: string;
@@ -161,6 +166,14 @@ export type Translations = {
     connectWallet: string;
     disconnectWallet: string;
     devnetBalance: string;
+    verifyAndLink: string;
+    walletVerified: string;
+    walletNotVerified: string;
+    walletLinkFailed: string;
+    walletLinkSuccess: string;
+    githubConnected: string;
+    githubNotConnected: string;
+    initializeReputation: string;
   };
   auth: {
     githubSignInFailed: string;
