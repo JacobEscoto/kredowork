@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import BountyExplorer from "@/components/bounty-explorer";
+import { getMarketplaceBounties } from "@/lib/marketplace";
 
 const title = "Explorar tareas de infraestructura de Solana";
 const description =
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary", title, description },
 };
 
-export default function BountiesPage() {
-  return <BountyExplorer />;
+export default async function BountiesPage() {
+  const bounties = await getMarketplaceBounties();
+  return <BountyExplorer bounties={bounties} />;
 }

@@ -19,12 +19,6 @@ export async function GET(request: Request) {
   const oauthErrorDescription = searchParams.get("error_description");
 
   if (oauthError || !code) {
-    console.error("OAuth fallback error from provider:", {
-      error: oauthError,
-      errorCode: searchParams.get("error_code"),
-      description: oauthErrorDescription,
-    });
-
     const redirectUrl = new URL(`${origin}/register`);
     redirectUrl.searchParams.set(
       "error",
@@ -37,10 +31,13 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -89,7 +86,6 @@ export async function GET(request: Request) {
         : authUser.id;
   const nowIso = new Date().toISOString();
 
-  // 1. Crear o actualizar perfil base en public.users
   const { error: userUpsertError } = await supabaseAdmin.from("users").upsert(
     {
       id: authUser.id,
@@ -112,7 +108,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // 2. Registrar o actualizar la identidad vinculada en public.user_identities
   const { error: identityUpsertError } = await supabaseAdmin
     .from("user_identities")
     .upsert(

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BountyDetail } from "@/components/bounty-detail";
-import { bounties } from "@/lib/bounties";
+import { getBountyById } from "@/lib/bounties";
 
 type BountyPageProps = { params: Promise<{ id: string }> };
 
@@ -9,7 +9,7 @@ export async function generateMetadata({
   params,
 }: BountyPageProps): Promise<Metadata> {
   const { id } = await params;
-  const bounty = bounties.find((item) => item.id === id);
+  const bounty = await getBountyById(id);
 
   if (!bounty) {
     return {
@@ -37,7 +37,7 @@ export async function generateMetadata({
 
 export default async function BountyDetailPage({ params }: BountyPageProps) {
   const { id } = await params;
-  const bounty = bounties.find((item) => item.id === id);
+  const bounty = await getBountyById(id);
   if (!bounty) notFound();
   return <BountyDetail bounty={bounty} />;
 }
