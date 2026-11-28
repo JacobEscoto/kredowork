@@ -239,62 +239,77 @@ export default function BountyExplorer({ bounties }: { bounties: Bounty[] }) {
         </div>
 
         {/* Buscador + filtros */}
-        <div className="mt-6 flex flex-col gap-4 border-b border-line lg:flex-row lg:items-end lg:justify-between">
-          <label className="relative order-1 flex w-full items-center text-[#6b7066] focus-within:text-[#171a15] lg:order-2 lg:w-72 lg:pb-2">
+        <div className="mt-6">
+          <label className="relative flex w-full items-center text-[#6b7066] focus-within:text-[#171a15]">
             <Search
-              size={16}
+              size={20}
               aria-hidden="true"
-              className="pointer-events-none absolute left-3 lg:top-3"
+              className="pointer-events-none absolute left-4"
             />
             <span className="sr-only">{t("bounties.searchAria")}</span>
             <input
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("bounties.searchPlaceholder")}
-              className="h-11 w-full rounded-md border border-[#cfd5c9] bg-white pl-9 pr-3 text-base text-[#171a15] placeholder:text-[#8a8e85] focus:border-[#171a15] focus:outline-none focus:ring-2 focus:ring-lime/40 sm:text-sm"
+              className="h-13 w-full rounded-lg border border-[#cfd5c9] bg-white pl-12 pr-12 text-base text-[#171a15] placeholder:text-[#8a8e85] focus:border-[#171a15] focus:outline-none focus:ring-4 focus:ring-lime/30 sm:h-14 [&::-webkit-search-cancel-button]:hidden"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-2 grid size-10 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[#6b7066] hover:bg-[#f1f3ee] hover:text-[#171a15] focus-visible:outline-2 focus-visible:outline-lime"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            )}
           </label>
 
-          <div
-            role="tablist"
-            aria-label={t("bounties.filterLabel")}
-            className="order-2 -mx-4 flex gap-5 overflow-x-auto px-4 scrollbar-none sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:order-1 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
-          >
-            {statuses.map((status) => {
-              const isSelected = active === status;
-              return (
-                <button
-                  key={status}
-                  role="tab"
-                  type="button"
-                  aria-selected={isSelected}
-                  onClick={() => setActive(status)}
-                  className={`-mb-px inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap border-0 border-b-2 bg-transparent px-0.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-lime ${
-                    isSelected
-                      ? "border-lime font-semibold text-[#171a15]"
-                      : "border-transparent text-[#5f645b] hover:text-[#171a15]"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`size-1.5 rounded-full ${statusDotColors[status]}`}
-                  />
-                  {statusLabel(status)}
-                  <span
-                    className={`rounded-full px-1.5 py-px text-[11px] tabular-nums ${
+          <div className="mt-5 border-b border-line">
+            <div
+              role="tablist"
+              aria-label={t("bounties.filterLabel")}
+              className="-mx-4 flex gap-5 overflow-x-auto px-4 scrollbar-none sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
+            >
+              {statuses.map((status) => {
+                const isSelected = active === status;
+                const count = totalByStatus(status);
+                return (
+                  <button
+                    key={status}
+                    role="tab"
+                    type="button"
+                    aria-selected={isSelected}
+                    onClick={() => setActive(status)}
+                    className={`-mb-px inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap border-0 border-b-2 bg-transparent px-0.5 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-lime ${
                       isSelected
-                        ? "bg-[#eaf3e4] text-[#3f6f2a]"
-                        : "bg-[#f1f3ee] text-[#6b7066]"
+                        ? "border-lime font-semibold text-[#171a15]"
+                        : "border-transparent text-[#5f645b] hover:text-[#171a15]"
                     }`}
                   >
-                    {totalByStatus(status) || "—"}
-                  </span>
-                </button>
-              );
-            })}
+                    <span
+                      aria-hidden="true"
+                      className={`size-1.5 rounded-full ${statusDotColors[status]}`}
+                    />
+                    {statusLabel(status)}
+                    {count > 0 && (
+                      <span
+                        className={`rounded-full px-1.5 py-px text-[11px] tabular-nums ${
+                          isSelected
+                            ? "bg-[#eaf3e4] text-[#3f6f2a]"
+                            : "bg-[#f1f3ee] text-[#6b7066]"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-
         {/* Encabezado de columnas (solo escritorio) */}
         <div
           aria-hidden="true"
