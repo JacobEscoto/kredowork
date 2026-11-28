@@ -1,82 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { siGithub } from "simple-icons";
 import { LoaderCircle } from "lucide-react";
-import { useTranslation } from "@/components/language-provider";
+import { SiGithub } from "@icons-pack/react-simple-icons";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
-export async function signInWithGitHub(nextPath = "/bounties") {
-  const origin = window.location.origin;
-  const redirectUrl = new URL(
-    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
-      `${origin}/auth/callback`,
-  );
-  redirectUrl.searchParams.set("next", nextPath);
-  const redirectTo = redirectUrl.toString();
-
-  const { error } = await supabaseBrowser.auth.signInWithOAuth({
-    provider: "github",
-    options: {
-      redirectTo,
-      scopes: "read:user user:email",
-    },
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
 export default function GitHubSignInButton() {
-  const { translate: t } = useTranslation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleSignIn() {
-    setIsLoading(true);
-    setHasError(false);
-
-    try {
-      await signInWithGitHub();
-    } catch {
-      setHasError(true);
-      setIsLoading(false);
+  async function signIn() {
+    setBusy(true);
+    setError(null);
+    const redirectTo = new URL(
+      "/auth/callback?next=/account",
+      window.location.origin,
+    ).toString();
+    const { error: signInError } = await supabaseBrowser.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo },
+    });
+    if (signInError) {
+      setError(signInError.message);
+      setBusy(false);
     }
   }
 
   return (
-    <>
+    <div className="w-full">
       <button
-        className="register-method social-method github-active github-auth-action"
         type="button"
-        onClick={handleSignIn}
-        disabled={isLoading}
-        aria-busy={isLoading}
+        onClick={() => void signIn()}
+        disabled={busy}
+        className="flex items-center gap-3 w-full min-h-15.5 py-2.5 px-3 rounded-md border border-[#e5e8e2] bg-white text-foreground text-left cursor-pointer mb-2.5 transition-colors duration-180 hover:border-[#c5d0be] hover:bg-[#fbfcfa] disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3"
       >
-        <span className="method-icon github-icon" aria-hidden="true">
-          {isLoading ? (
-            <LoaderCircle className="github-spinner" />
+        <span
+          className="grid place-items-center flex-none w-9 h-9 text-[#171a15]"
+          aria-hidden="true"
+        >
+          {busy ? (
+            <LoaderCircle size={17} className="animate-spin" />
           ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d={siGithub.path} />
-            </svg>
+            <SiGithub size={17} />
           )}
         </span>
-        <span className="method-copy">
-          <strong>
-            {isLoading
-              ? t("register.connectingGitHub")
-              : t("register.continueGitHub")}
+        <span className="flex flex-1 flex-col gap-1 min-w-0">
+          <strong className="text-[11px] font-semibold truncate">
+            {busy ? "Connecting to GitHub…" : "Continue with GitHub"}
           </strong>
-          <span>{t("register.githubSub")}</span>
+          <span className="text-[#82877d] text-[9px] truncate">
+            Use your GitHub account to sign in
+          </span>
         </span>
       </button>
-      {hasError && (
-        <p className="github-auth-error" role="alert">
-          {t("auth.githubSignInFailed")}
+      {error && (
+        <p
+          className="m-0 p-3 border border-[#e4c5a3] bg-[#fffaf4] text-[#59442f] text-[11px]"
+          role="alert"
+        >
+          {error}
         </p>
       )}
-    </>
+    </div>
   );
 }

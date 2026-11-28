@@ -13,5 +13,5 @@ export function createClient() {
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
-// Instancia reutilizable para componentes cliente ('use client')
+// Reusable instance for client components ('use client')
 export const supabaseBrowser = createClient();

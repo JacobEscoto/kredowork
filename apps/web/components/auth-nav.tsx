@@ -16,12 +16,16 @@ function toNavUser(
   if (!user) return null;
   const meta = user.user_metadata ?? {};
   const avatar = typeof meta.avatar_url === "string" ? meta.avatar_url : null;
+  const walletAddr =
+    typeof meta.wallet_address === "string" ? meta.wallet_address : null;
   const name =
     typeof meta.full_name === "string"
       ? meta.full_name
       : typeof meta.user_name === "string"
         ? meta.user_name
-        : null;
+        : walletAddr
+          ? `${walletAddr.slice(0, 4)}…${walletAddr.slice(-4)}`
+          : null;
   return { avatarUrl: avatar, name };
 }
 
@@ -33,9 +37,9 @@ export default function AuthNav() {
   useEffect(() => {
     let active = true;
 
-    supabaseBrowser.auth.getUser().then(({ data }) => {
+    supabaseBrowser.auth.getSession().then(({ data }) => {
       if (!active) return;
-      setUser(toNavUser(data.user));
+      setUser(toNavUser(data.session?.user ?? null));
       setReady(true);
     });
 
@@ -52,12 +56,21 @@ export default function AuthNav() {
     };
   }, []);
 
-  // Evita parpadeo del botón "Entrar" mientras se resuelve la sesión.
-  if (!ready) return <span className="nav-profile-placeholder" aria-hidden />;
+  if (!ready) {
+    return (
+      <span
+        className="inline-block h-9 w-9 mx-2.5 rounded-full shrink-0"
+        aria-hidden
+      />
+    );
+  }
 
   if (!user) {
     return (
-      <Link className="nav-auth-cta" href="/register">
+      <Link
+        className="inline-flex items-center justify-center min-h-9 px-3 rounded-md border border-[#171a15] bg-[#171a15] text-white no-underline text-[11px] font-semibold whitespace-nowrap transition-colors duration-180 hover:border-[#30372c] hover:bg-[#30372c] focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3 max-[760px]:min-h-8.5 max-[760px]:px-2.5 max-[760px]:text-[10px]"
+        href="/register"
+      >
         {t("nav.accountAccess")}
       </Link>
     );
@@ -65,7 +78,7 @@ export default function AuthNav() {
 
   return (
     <Link
-      className="nav-profile"
+      className="inline-flex items-center justify-center w-9 h-9 mx-2.5 rounded-full overflow-hidden border border-[#e6e9e3] bg-[#f8f9f7] text-[#3d4538] shrink-0 no-underline transition-all duration-180 hover:border-[#30372c] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-2"
       href="/account"
       aria-label={user.name ?? t("nav.profile")}
       title={user.name ?? t("nav.profile")}
@@ -78,7 +91,7 @@ export default function AuthNav() {
           referrerPolicy="no-referrer"
           width={36}
           height={36}
-          className="rounded-full"
+          className="w-full h-full object-cover rounded-full block"
         />
       ) : (
         <UserRound size={18} aria-hidden="true" />

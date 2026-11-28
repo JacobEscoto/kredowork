@@ -33,16 +33,16 @@ export default function SignOutButton() {
   }
 
   return (
-    <div className="account-signout-wrap">
+    <div className="flex flex-col items-start">
       <button
-        className="account-signout"
+        className="flex items-center gap-2 min-h-[46px] px-[15px] rounded-md border border-[#e1e5dd] bg-white text-[#32372e] text-[11px] cursor-pointer transition-colors duration-180 hover:border-[#c5d0be] hover:bg-[#fbfcfa] disabled:cursor-wait disabled:opacity-72 focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3 max-[460px]:min-h-[42px] max-[460px]:px-[11px] max-[460px]:text-[10px]"
         type="button"
         onClick={() => void signOut()}
         disabled={pending}
       >
         {pending ? (
           <LoaderCircle
-            className="github-spinner"
+            className="animate-spin"
             size={15}
             aria-hidden="true"
           />
@@ -52,7 +52,7 @@ export default function SignOutButton() {
         {pending ? t("auth.signingOut") : t("auth.signOut")}
       </button>
       {error && (
-        <p className="github-auth-error" role="alert">
+        <p className="mt-2 text-[#a24132] text-[10px] leading-[1.5]" role="alert">
           {error}
         </p>
       )}

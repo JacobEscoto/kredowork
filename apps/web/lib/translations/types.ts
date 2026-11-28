@@ -135,6 +135,16 @@ export type Translations = {
     githubAccount: string;
     active: string;
     goToKredoWork: string;
+    displayNameLabel: string;
+    displayNamePlaceholder: string;
+    changePhoto: string;
+    photoHint: string;
+    saveChanges: string;
+    saving: string;
+    savedSuccess: string;
+    saveError: string;
+    invalidImage: string;
+    viewPublicProfile: string;
   };
   register: {
     enter: string;
