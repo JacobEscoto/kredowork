@@ -22,166 +22,208 @@ export default function AboutPage() {
     { title: t("about.step3Title"), body: t("about.step3Body") },
   ];
 
+  const guarantees = [
+    {
+      icon: ShieldCheck,
+      title: t("about.guarantee1Title"),
+      body: t("about.guarantee1Body"),
+    },
+    {
+      icon: Clock,
+      title: t("about.guarantee2Title"),
+      body: t("about.guarantee2Body"),
+    },
+    {
+      icon: Scale,
+      title: t("about.guarantee3Title"),
+      body: t("about.guarantee3Body"),
+    },
+    {
+      icon: Gavel,
+      title: t("about.guarantee4Title"),
+      body: t("about.guarantee4Body"),
+    },
+  ];
+
+  const flowItems = [
+    t("about.flowItem1"),
+    t("about.flowItem2"),
+    t("about.flowItem3"),
+    t("about.flowItem4"),
+  ];
+
+  // Conector entre pasos: vertical en móvil, horizontal desde md.
+  // Cada paso dibuja el suyo hacia el siguiente, así nunca se solapa
+  // con los círculos ni sobrepasa el último paso.
+  const connector =
+    "after:absolute after:content-[''] after:bg-[#d3dacd] " +
+    "after:left-4.25 after:top-11 after:bottom-2 after:w-px " +
+    "md:after:left-11 md:after:right-2 md:after:top-4.25 md:after:bottom-auto md:after:h-px md:after:w-auto";
+
   return (
-    <main className="min-h-screen max-w-360 mx-auto px-[6.25%] flex flex-col max-[1050px]:px-[4%] max-[760px]:px-5.5 max-[460px]:px-4.25">
-      <header className="h-19.5 flex items-center justify-between border-b border-line max-[760px]:h-16.5">
+    <main className="mx-auto flex min-h-dvh w-full max-w-360 flex-col px-4 sm:px-6 md:px-8 lg:px-[6.25%]">
+      {/* Header */}
+      <header className="flex h-16 items-center justify-between border-b border-line lg:h-19.5">
         <Brand />
-        <div className="ml-auto flex items-center gap-5.5 max-[760px]:gap-3 max-[460px]:gap-0">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4 lg:gap-5.5">
           <Link
-            className="inline-flex items-center gap-2 text-[#71766e] no-underline text-[11px] hover:text-[#171a15]"
             href="/"
+            className="inline-flex min-h-11 items-center gap-2 rounded px-1 text-xs text-[#5f645b] no-underline transition-colors hover:text-[#171a15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171a15]"
           >
-            <ArrowLeft size={14} /> {t("common.backHome")}
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">
+              {t("common.backHome")}
+            </span>
           </Link>
           <LanguageDropdown />
         </div>
       </header>
-      <section className="max-w-270 pt-[clamp(58px,8vw,104px)] pb-16.5 border-b border-line max-[760px]:pt-12.5 max-[760px]:pb-10.5">
-        <h1 className="m-0 max-w-225 text-[#171a15] text-[clamp(48px,7vw,82px)] leading-none tracking-[-0.065em] font-semibold max-[760px]:text-[clamp(46px,9vw,62px)] max-[760px]:tracking-[-0.055em]">
+
+      {/* Hero */}
+      <section className="max-w-270 border-b border-line pb-12 pt-[clamp(3rem,8vw,6.5rem)] md:pb-16">
+        <h1 className="m-0 max-w-225 text-[clamp(2.5rem,8vw,5.125rem)] font-semibold leading-none tracking-[-0.06em] text-[#171a15]">
           {t("about.clearerWay")}
           <br />
           {t("about.toBuild")}{" "}
-          <span className="text-[#69b94c]">{t("about.together")}</span>
+          <span className="text-[#4f9a36]">{t("about.together")}</span>
         </h1>
-        <p className="max-w-155 mt-6.5 text-[#646a60] text-[14px] leading-[1.8]">
+        <p className="mt-6 max-w-155 text-sm leading-7 text-[#5f645b] sm:text-[15px] md:mt-6.5">
           {t("about.intro")}
         </p>
       </section>
-      <ol className="relative grid grid-cols-3 m-0 pb-17 border-b border-line list-none before:absolute before:top-4.25 before:left-4.25 before:right-[calc(33.333%-17px)] before:h-px before:bg-[#dfe4da] before:content-[''] max-[760px]:grid-cols-1 max-[760px]:pb-12 max-[760px]:before:right-auto max-[760px]:before:bottom-4.25 max-[760px]:before:w-px max-[760px]:before:h-auto">
-        {steps.map(({ title, body }, index) => (
-          <li
-            className="relative flex min-w-0 flex-col items-start pr-7 max-[760px]:grid max-[760px]:grid-cols-[35px_minmax(0,1fr)] max-[760px]:gap-x-4.5 max-[760px]:pb-6.5 max-[760px]:pr-0 max-[760px]:last:pb-0"
-            key={title}
-          >
-            <span
-              className="z-1 grid w-8.75 h-8.75 place-items-center border border-lime rounded-full bg-white text-[#548f3c] text-[10px] font-bold"
-              aria-hidden="true"
+
+      {/* Timeline */}
+      <ol className="m-0 grid list-none grid-cols-1 border-b border-line p-0 py-10 md:grid-cols-3 md:py-14">
+        {steps.map(({ title, body }, index) => {
+          const isLast = index === steps.length - 1;
+          return (
+            <li
+              key={title}
+              className={`relative grid min-w-0 grid-cols-[35px_minmax(0,1fr)] gap-x-4 pb-8 last:pb-0 md:flex md:flex-col md:items-start md:pb-0 md:pr-7 ${
+                isLast ? "" : connector
+              }`}
             >
-              0{index + 1}
-            </span>
-            <div className="max-w-75 pt-4.25 max-[760px]:pt-px">
-              <h2 className="m-0 text-[#171a15] text-[15px] leading-[1.35] tracking-[-0.25px]">
-                {title}
-              </h2>
-              <p className="mt-2 text-[#70756b] text-[11px] leading-[1.7]">
-                {body}
-              </p>
-            </div>
-          </li>
-        ))}
+              <span
+                aria-hidden="true"
+                className="grid size-8.75 place-items-center rounded-full border border-lime bg-white text-xs font-bold text-[#3f7a2a]"
+              >
+                0{index + 1}
+              </span>
+              <div className="pt-1.5 md:max-w-75 md:pt-4.25">
+                <h2 className="m-0 text-base leading-snug tracking-[-0.02em] text-[#171a15]">
+                  {title}
+                </h2>
+                <p className="mt-2 text-[13px] leading-6 text-[#5f645b]">
+                  {body}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ol>
+
+      {/* Garantías */}
       <section
-        className="grid grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] gap-[clamp(32px,6vw,84px)] py-17 border-b border-line max-[900px]:grid-cols-1 max-[900px]:gap-7.5 max-[900px]:py-13.5 max-[760px]:py-12"
         aria-label={t("about.guaranteesKicker")}
+        className="grid grid-cols-1 gap-8 border-b border-line py-12 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] lg:gap-[clamp(2rem,6vw,5.25rem)] lg:py-17"
       >
-        <div className="max-[900px]:max-w-155">
-          <span className="flex items-center gap-2.5 mb-3.5 text-[#697063] text-[11px]">
+        <div className="max-w-155">
+          <span className="mb-3.5 flex items-center gap-2.5 text-xs text-[#5f645b]">
             {t("about.guaranteesKicker")}
           </span>
-          <h2 className="max-w-95 m-0 text-[clamp(27px,3vw,36px)] leading-[1.12] tracking-[-1.4px] max-[560px]:text-[28px]">
+          <h2 className="m-0 max-w-95 text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.12] tracking-[-0.04em] text-[#171a15]">
             {t("about.guaranteesTitle")}
           </h2>
-          <p className="max-w-90 mt-3.75 text-[#676c63] text-xs leading-[1.75]">
+          <p className="mt-3.75 max-w-90 text-[13px] leading-6 text-[#5f645b]">
             {t("about.guaranteesSubtitle")}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-x-7 max-[560px]:grid-cols-1 max-[560px]:gap-x-0">
-          {[
-            {
-              icon: ShieldCheck,
-              title: t("about.guarantee1Title"),
-              body: t("about.guarantee1Body"),
-            },
-            {
-              icon: Clock,
-              title: t("about.guarantee2Title"),
-              body: t("about.guarantee2Body"),
-            },
-            {
-              icon: Scale,
-              title: t("about.guarantee3Title"),
-              body: t("about.guarantee3Body"),
-            },
-            {
-              icon: Gavel,
-              title: t("about.guarantee4Title"),
-              body: t("about.guarantee4Body"),
-            },
-          ].map(({ icon: Icon, title, body }) => (
+
+        <div className="grid grid-cols-1 gap-x-7 sm:grid-cols-2">
+          {guarantees.map(({ icon: Icon, title, body }) => (
             <article
-              className="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 content-start py-4 border-t border-line"
               key={title}
+              className="grid grid-cols-[34px_minmax(0,1fr)] content-start gap-x-3 border-t border-line py-4"
             >
-              <div className="row-span-2 grid place-items-center w-8 h-8 bg-[#f0f5ec] text-[#609847]">
+              <div
+                aria-hidden="true"
+                className="row-span-2 grid size-8.5 place-items-center bg-[#eaf3e4] text-[#3f7a2a]"
+              >
                 <Icon size={17} />
               </div>
-              <h3 className="mt-0.5 mb-1.25 text-xs leading-[1.45]">{title}</h3>
-              <p className="col-start-2 m-0 text-[#70756b] text-[10px] leading-[1.65]">
+              <h3 className="mb-1.25 mt-0.5 text-sm font-semibold leading-snug text-[#171a15]">
+                {title}
+              </h3>
+              <p className="col-start-2 m-0 text-xs leading-relaxed text-[#5f645b]">
                 {body}
               </p>
             </article>
           ))}
         </div>
       </section>
+
+      {/* Flujo */}
       <section
-        className="grid grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] gap-[clamp(32px,6vw,84px)] py-17 border-b border-line max-[900px]:grid-cols-1 max-[900px]:gap-7.5 max-[900px]:py-13.5 max-[760px]:py-12"
         aria-label={t("about.flowKicker")}
+        className="grid grid-cols-1 gap-8 border-b border-line py-12 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] lg:gap-[clamp(2rem,6vw,5.25rem)] lg:py-17"
       >
-        <div className="max-[900px]:max-w-155">
-          <span className="flex items-center gap-2.5 mb-3.5 text-[#697063] text-[11px]">
+        <div className="max-w-155">
+          <span className="mb-3.5 flex items-center gap-2.5 text-xs text-[#5f645b]">
             {t("about.flowKicker")}
           </span>
-          <h2 className="max-w-95 m-0 text-[clamp(27px,3vw,36px)] leading-[1.12] tracking-[-1.4px] max-[560px]:text-[28px]">
+          <h2 className="m-0 max-w-95 text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.12] tracking-[-0.04em] text-[#171a15]">
             {t("about.flowTitle")}
           </h2>
         </div>
-        <div className="grid grid-cols-2 gap-x-7 max-[560px]:grid-cols-1 max-[560px]:gap-x-0">
-          {[
-            t("about.flowItem1"),
-            t("about.flowItem2"),
-            t("about.flowItem3"),
-            t("about.flowItem4"),
-          ].map((item, index) => (
+
+        <div className="grid grid-cols-1 gap-x-7 sm:grid-cols-2">
+          {flowItems.map((item, index) => (
             <article
-              className="grid grid-cols-[30px_minmax(0,1fr)] gap-3 min-h-18.5 py-4 border-t border-line"
               key={item}
+              className="grid min-h-18.5 grid-cols-[30px_minmax(0,1fr)] gap-3 border-t border-line py-4"
             >
-              <span className="text-[10px] tabular-nums text-[#609847]">
+              <span className="text-xs font-medium tabular-nums text-[#3f7a2a]">
                 0{index + 1}
               </span>
-              <div>
-                <p className="m-0 text-[#41463d] text-[11px] leading-[1.7]">
-                  {item}
-                </p>
-              </div>
+              <p className="m-0 text-[13px] leading-6 text-[#41463d]">
+                {item}
+              </p>
             </article>
           ))}
         </div>
       </section>
-      <section className="flex items-center justify-between gap-6.25 py-8 border-b border-line max-[760px]:items-start max-[760px]:flex-col">
+
+      {/* Callout */}
+      <section className="flex flex-col items-stretch gap-5 border-b border-line py-8 md:flex-row md:items-center md:justify-between md:gap-6">
         <div>
-          <span className="text-[#82877d] text-[9px] tracking-[0.04em]">
+          <span className="text-xs tracking-[0.04em] text-[#6b7066]">
             {t("about.calloutLabel")}
           </span>
-          <h2 className="max-w-125 mt-2 mb-0 text-[23px] leading-tight tracking-[-0.8px] max-[760px]:text-[21px] max-[560px]:text-[21px]">
+          <h2 className="mb-0 mt-2 max-w-125 text-[clamp(1.3rem,3vw,1.5rem)] leading-tight tracking-[-0.03em] text-[#171a15]">
             {t("about.calloutTitle1")}
             <br />
             {t("about.calloutTitle2")}
           </h2>
         </div>
         <Link
-          className="inline-flex items-center justify-center gap-3 no-underline min-h-11.5 px-4.5 rounded-md bg-[#171a15] text-white text-xs whitespace-nowrap transition-colors duration-180 hover:bg-[#30372c]"
           href="/register"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-3 whitespace-nowrap rounded-md bg-[#171a15] px-5 text-sm font-medium text-white no-underline transition-colors duration-180 hover:bg-[#30372c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime md:w-auto"
         >
-          {t("home.createAccount")} <ArrowRight size={16} />
+          {t("home.createAccount")}
+          <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </section>
-      <footer className="flex items-center justify-between gap-5 py-4.5 text-[#777c73] text-[10px] max-[760px]:flex-wrap max-[760px]:gap-3 [&>span:nth-child(2)]:max-[760px]:order-3 [&>span:nth-child(2)]:max-[760px]:w-full">
+
+      {/* Footer */}
+      <footer className="flex flex-col items-start gap-3 py-5 text-xs text-[#6b7066] md:flex-row md:items-center md:justify-between md:gap-5">
         <Brand compact variant="footer" />
         <span>{t("common.openCoordination")}</span>
-        <span className="m-0 max-[460px]:w-full">
+        <span className="m-0">
           {t("common.builtOnSolana")}{" "}
-          <span className="px-0.75 text-[#a6aca0]">·</span> Devnet
+          <span aria-hidden="true" className="px-0.75 text-[#a6aca0]">
+            ·
+          </span>{" "}
+          Devnet
         </span>
       </footer>
     </main>
