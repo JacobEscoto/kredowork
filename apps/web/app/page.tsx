@@ -1,18 +1,28 @@
-import type { Metadata } from "next";
-import HomePageContent from "@/components/home-page";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import HomePage from "@/components/home-page";
 
-const title = "Trabajo de infraestructura Solana con recompensas verificables";
-const description =
-  "Publica o encuentra tareas de infraestructura con alcance claro, revisión comunitaria y recompensas en escrow sobre Solana Devnet.";
+export default async function Page() {
+  const cookieStore = await cookies();
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
-export const metadata: Metadata = {
-  title,
-  description,
-  alternates: { canonical: "/" },
-  openGraph: { title, description, url: "/", type: "website" },
-  twitter: { card: "summary", title, description },
-};
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+      },
+    },
+  );
 
-export default function HomePage() {
-  return <HomePageContent />;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return <HomePage isAuthenticated={Boolean(user)} />;
 }

@@ -1,14 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, ShieldCheck } from "lucide-react";
 import AuthNav from "@/components/auth-nav";
 import Brand from "@/components/brand";
 import { LanguageDropdown } from "@/components/language-dropdown";
 import { useTranslation } from "@/components/language-provider";
+import { createClient } from "@/lib/supabase/client";
 
-export default function HomePageContent() {
+interface HomePageProps {
+  isAuthenticated?: boolean;
+}
+
+export default function HomePage({ isAuthenticated = false }: HomePageProps) {
   const { translate: t } = useTranslation();
+  const [loggedIn, setLoggedIn] = useState(isAuthenticated);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setLoggedIn(Boolean(user));
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(Boolean(session?.user));
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <main className="min-h-screen max-w-[1440px] mx-auto px-[6.25%] flex flex-col max-[1050px]:px-[4%] max-[760px]:px-[22px] max-[460px]:px-[17px]">
@@ -45,9 +68,10 @@ export default function HomePageContent() {
           <div className="flex items-center gap-[23px] mt-8 max-[460px]:items-start max-[460px]:flex-col max-[460px]:gap-[18px]">
             <Link
               className="inline-flex items-center justify-center gap-3 no-underline min-h-[46px] px-[18px] bg-[#171a15] text-white text-xs transition-colors duration-180 hover:bg-[#30372c] rounded-md"
-              href="/register"
+              href={loggedIn ? "/bounties" : "/register"}
             >
-              {t("home.createAccount")} <ArrowRight size={16} />
+              {loggedIn ? t("nav.bounties") : t("home.createAccount")}{" "}
+              <ArrowRight size={16} />
             </Link>
             <Link
               className="inline-flex items-center justify-center gap-3 no-underline text-[#262a22] text-xs hover:text-[#508f38] rounded-md"
