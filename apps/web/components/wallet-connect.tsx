@@ -219,16 +219,30 @@ export default function WalletConnect({
 
   const isMethodVariant = variant === "method";
 
+  const methodButton =
+    "flex min-h-16 w-full cursor-pointer items-center gap-3 rounded-md border border-[#d5dacf] bg-white px-3 py-2.5 text-left text-foreground transition-colors duration-180 hover:border-[#171a15] hover:bg-[#f7f8f5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-70";
+
+  const compactButtonBase =
+    "inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-70 sm:w-auto";
+
+  const compactButton = connected
+    ? `${compactButtonBase} border-[#9ccf84] bg-[#eef8e9] text-[#2f5d1c] hover:bg-[#e3f3da]`
+    : `${compactButtonBase} border-[#171a15] bg-white text-[#171a15] hover:bg-[#f1f3ee]`;
+
+  const pickerClass = isMethodVariant
+    ? "absolute left-0 right-0 top-[calc(100%+8px)] z-10"
+    : "absolute left-0 top-[calc(100%+8px)] z-10 min-w-48";
+
   return (
     <div
-      className={`relative flex items-center${isMethodVariant ? " w-full flex-col items-stretch" : " flex-wrap gap-2"}`}
+      className={`relative flex ${
+        isMethodVariant
+          ? "w-full flex-col items-stretch gap-2"
+          : "flex-wrap items-center gap-2"
+      }`}
     >
       <button
-        className={
-          isMethodVariant
-            ? "flex items-center gap-3 w-full min-h-[62px] py-2.5 px-3 rounded-md border border-[#e5e8e2] bg-white text-foreground text-left cursor-pointer mb-2.5 transition-colors duration-180 hover:border-[#c5d0be] hover:bg-[#fbfcfa] disabled:cursor-wait disabled:opacity-72 focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3 max-[460px]:gap-2 max-[460px]:p-2"
-            : "flex items-center gap-[9px] py-2.5 px-3.5 rounded-md border border-[#191b16] bg-[#171a15] text-white text-xs cursor-pointer transition-colors duration-200 hover:bg-[#353a30] disabled:cursor-wait disabled:opacity-72 max-[760px]:py-[9px] max-[760px]:px-2.5 max-[760px]:text-[11px] max-[460px]:gap-1.5 max-[460px]:p-2"
-        }
+        className={isMethodVariant ? methodButton : compactButton}
         type="button"
         onClick={handleButtonClick}
         disabled={busy}
@@ -240,18 +254,18 @@ export default function WalletConnect({
         {isMethodVariant ? (
           <>
             <span
-              className="grid place-items-center flex-none w-9 h-9 text-[#171a15] max-[460px]:w-[30px] max-[460px]:h-[30px]"
+              className="grid size-8 flex-none place-items-center text-[#171a15] sm:size-9"
               aria-hidden="true"
             >
               {busy ? (
-                <LoaderCircle size={17} className="animate-spin" />
+                <LoaderCircle size={18} className="animate-spin" />
               ) : connected ? (
-                <Check size={17} />
+                <Check size={18} />
               ) : (
-                <WalletIcon size={17} strokeWidth={1.8} />
+                <WalletIcon size={18} strokeWidth={1.8} />
               )}
             </span>
-            <span className="flex flex-1 flex-col gap-1 min-w-0 [&_strong]:text-[11px] [&_strong]:font-semibold [&_strong]:truncate [&>span]:text-[#82877d] [&>span]:text-[9px] [&>span]:truncate">
+            <span className="flex min-w-0 flex-1 flex-col gap-1 [&>span]:truncate [&>span]:text-xs [&>span]:text-[#6b7066] [&_strong]:truncate [&_strong]:text-[13px] [&_strong]:font-semibold">
               <strong>
                 {busy
                   ? t("wallet.connecting")
@@ -267,21 +281,21 @@ export default function WalletConnect({
             </span>
             {wallets.length > 1 && !connected && (
               <span
-                className="grid place-items-center ml-auto text-muted"
+                className="ml-auto grid place-items-center text-muted"
                 aria-hidden="true"
               >
-                <ChevronDown size={15} />
+                <ChevronDown size={16} />
               </span>
             )}
           </>
         ) : (
           <>
             {busy ? (
-              <LoaderCircle size={15} className="animate-spin" />
+              <LoaderCircle size={16} className="animate-spin" />
             ) : connected ? (
-              <Check size={15} strokeWidth={2} />
+              <Check size={16} strokeWidth={2} />
             ) : (
-              <WalletIcon size={15} strokeWidth={1.8} />
+              <WalletIcon size={16} strokeWidth={1.8} />
             )}
             {connected
               ? shortAddress
@@ -289,11 +303,11 @@ export default function WalletConnect({
                 ? t("wallet.connecting")
                 : t("wallet.connectWallet")}
             {connected && (
-              <span className="text-[9px] text-[#b2e995] border-l border-white/21 pl-2">
+              <span className="border-l border-[#2f5d1c]/25 pl-2 text-[11px] text-[#3f6f2a]">
                 {t("common.solanaDevnet")}
               </span>
             )}
-            {!connected && wallets.length > 1 && <ChevronDown size={13} />}
+            {!connected && wallets.length > 1 && <ChevronDown size={14} />}
           </>
         )}
       </button>
@@ -302,12 +316,12 @@ export default function WalletConnect({
         <div
           className={
             isMethodVariant
-              ? "w-full flex items-center justify-between gap-2 mb-2"
-              : "flex items-center gap-2"
+              ? "flex w-full flex-wrap items-center justify-between gap-2"
+              : "flex flex-wrap items-center gap-2"
           }
         >
           <span
-            className={`text-[10px] ${walletVerified ? "text-[#568a3f] font-medium" : "text-[#8a6d3b]"}`}
+            className={`text-xs ${walletVerified ? "font-medium text-[#3f6f2a]" : "text-[#8a6d3b]"}`}
             role="status"
           >
             {walletVerified
@@ -317,7 +331,7 @@ export default function WalletConnect({
           {!walletVerified && (
             <button
               type="button"
-              className="px-2.5 py-1.5 rounded border border-line bg-white text-foreground text-[10px] font-medium cursor-pointer hover:bg-soft disabled:opacity-60"
+              className="min-h-9 cursor-pointer rounded-md border border-[#171a15] bg-[#171a15] px-3 text-xs font-medium text-white transition-colors hover:bg-[#30372c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-60"
               onClick={() => void verifyAndLinkWallet(connected, false)}
               disabled={busy}
             >
@@ -329,7 +343,7 @@ export default function WalletConnect({
 
       {pickerOpen && !connected && (
         <div
-          className="absolute z-10 right-0 top-[calc(100%+8px)] min-w-[180px] p-[5px] bg-white border border-line shadow-[0_10px_30px_#11130f18] [&_button]:block [&_button]:w-full [&_button]:py-2.5 [&_button]:px-3 [&_button]:border-0 [&_button]:bg-white [&_button]:text-left [&_button]:text-xs [&_button]:cursor-pointer [&_button:hover]:bg-soft"
+          className={`${pickerClass} border border-line bg-white p-1.25 shadow-[0_10px_30px_#11130f18] [&_button:hover]:bg-soft [&_button]:block [&_button]:min-h-11 [&_button]:w-full [&_button]:cursor-pointer [&_button]:border-0 [&_button]:bg-white [&_button]:px-3 [&_button]:py-2.5 [&_button]:text-left [&_button]:text-sm`}
           role="menu"
           aria-label={t("wallet.pickerAria")}
         >
@@ -348,11 +362,7 @@ export default function WalletConnect({
 
       {message && (
         <p
-          className={
-            isMethodVariant
-              ? "static w-full mt-1 mb-2 py-[11px] px-[13px] border border-[#e4c5a3] bg-[#fffaf4] text-[#59442f] text-[11px] leading-[1.5]"
-              : "w-full py-[9px] px-[12px] border border-[#e4c5a3] bg-[#fffaf4] text-[#59442f] text-[11px] leading-[1.5]"
-          }
+          className="w-full border border-[#e4c5a3] bg-[#fffaf4] px-3 py-2.5 text-xs leading-normal text-[#59442f]"
           role="status"
         >
           {message}

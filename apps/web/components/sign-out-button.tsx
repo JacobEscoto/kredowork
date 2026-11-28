@@ -33,26 +33,22 @@ export default function SignOutButton() {
   }
 
   return (
-    <div className="flex flex-col items-start">
+    <div className="flex w-full flex-col items-stretch sm:w-auto sm:items-start">
       <button
-        className="flex items-center gap-2 min-h-[46px] px-[15px] rounded-md border border-[#e1e5dd] bg-white text-[#32372e] text-[11px] cursor-pointer transition-colors duration-180 hover:border-[#c5d0be] hover:bg-[#fbfcfa] disabled:cursor-wait disabled:opacity-72 focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3 max-[460px]:min-h-[42px] max-[460px]:px-[11px] max-[460px]:text-[10px]"
+        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-[#cfd5c9] bg-white px-4 text-sm font-medium text-[#32372e] transition-colors duration-180 hover:border-[#d9a69c] hover:bg-[#fdf3f1] hover:text-[#a24132] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-70 sm:w-auto"
         type="button"
         onClick={() => void signOut()}
         disabled={pending}
       >
         {pending ? (
-          <LoaderCircle
-            className="animate-spin"
-            size={15}
-            aria-hidden="true"
-          />
+          <LoaderCircle className="animate-spin" size={16} aria-hidden="true" />
         ) : (
-          <LogOut size={15} aria-hidden="true" />
+          <LogOut size={16} aria-hidden="true" />
         )}
         {pending ? t("auth.signingOut") : t("auth.signOut")}
       </button>
       {error && (
-        <p className="mt-2 text-[#a24132] text-[10px] leading-[1.5]" role="alert">
+        <p className="mt-2 text-xs leading-normal text-[#a24132]" role="alert">
           {error}
         </p>
       )}

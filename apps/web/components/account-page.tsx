@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   Camera,
   Check,
   ExternalLink,
   LoaderCircle,
   Wallet,
 } from "lucide-react";
+import { SiGithub } from "@icons-pack/react-simple-icons";
 import SignOutButton from "@/components/sign-out-button";
 import Brand from "@/components/brand";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -25,6 +27,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/webp",
   "image/gif",
 ]);
+
+const CARD = "w-full border border-[#e6e9e3] bg-white p-4 sm:p-5";
 
 export default function AccountPage() {
   const { translate: t } = useTranslation();
@@ -194,200 +198,223 @@ export default function AccountPage() {
     .toUpperCase();
 
   return (
-    <main className="min-h-screen max-w-360 mx-auto px-[6.25%] flex flex-col max-[1050px]:px-[4%] max-[760px]:px-5.5 max-[460px]:px-4.25">
-      <header className="h-19.5 flex items-center justify-between border-b border-line max-[760px]:h-16.5">
+    <main className="mx-auto flex min-h-dvh w-full max-w-360 flex-col px-4 sm:px-6 md:px-8 lg:px-[6.25%]">
+      {/* Header */}
+      <header className="flex h-16 items-center justify-between border-b border-line lg:h-19.5">
         <Brand />
-        <div className="ml-auto flex items-center gap-5.5 max-[760px]:gap-3 max-[460px]:gap-0">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4 lg:gap-5.5">
           <Link
-            className="inline-flex items-center gap-2 text-[#71766e] no-underline text-[11px] hover:text-[#171a15]"
             href="/"
+            className="inline-flex min-h-11 items-center gap-2 rounded px-1 text-xs text-[#5f645b] no-underline transition-colors hover:text-[#171a15] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171a15]"
           >
-            <ArrowLeft size={14} /> {t("common.backHome")}
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">
+              {t("common.backHome")}
+            </span>
           </Link>
           <LanguageDropdown />
         </div>
       </header>
 
-      <section className="flex flex-1 flex-col items-start justify-center w-full max-w-160 mx-auto py-16 max-[760px]:py-11">
-        <h1 className="m-0 text-[#171a15] text-[clamp(44px,5.5vw,64px)] leading-none tracking-[-3.5px] font-semibold max-[460px]:text-[42px] max-[460px]:tracking-[-2.5px]">
+      {/* Contenido */}
+      <section className="mx-auto flex w-full max-w-160 flex-1 flex-col py-10 sm:py-14 lg:py-16">
+        <h1 className="m-0 text-[clamp(2.5rem,8vw,4rem)] font-semibold leading-none tracking-[-0.055em] text-[#171a15]">
           {t("account.profile")} {t("account.toKredoWork")}
         </h1>
-        <p className="mt-4 mb-7 text-[#676c63] text-[13px] leading-[1.7]">
+        <p className="mb-7 mt-4 text-sm leading-7 text-[#676c63]">
           {t("account.lede")}
         </p>
 
-        {/* Formulario editable de Avatar + Nombre visible */}
-        {user && (
-          <form
-            onSubmit={(e) => void handleSaveProfile(e)}
-            className="w-full p-5 border border-[#e6e9e3] bg-white flex flex-col gap-5"
-          >
-            <div className="flex items-center gap-4 flex-wrap">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="relative group w-18 h-18 rounded-full overflow-hidden border border-[#dce1d7] bg-[#f4f6f2] text-[#2c3327] font-semibold text-base grid place-items-center cursor-pointer shrink-0 focus-visible:outline-2 focus-visible:outline-lime"
-                aria-label={t("account.changePhoto")}
-              >
-                {shownAvatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={shownAvatar}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover block"
-                  />
-                ) : (
-                  <span>{initials}</span>
-                )}
-                <span className="absolute inset-0 bg-black/45 text-white opacity-0 group-hover:opacity-100 transition-opacity grid place-items-center">
-                  <Camera size={18} />
-                </span>
-              </button>
-
-              <div className="flex flex-col gap-1.5">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
+        <div className="flex flex-col gap-4">
+          {/* Perfil editable */}
+          {user && (
+            <form
+              onSubmit={(e) => void handleSaveProfile(e)}
+              className={`${CARD} flex flex-col gap-5`}
+            >
+              <div className="flex items-center gap-4">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-line bg-[#f8f9f7] text-[#171a15] text-[11px] font-medium cursor-pointer hover:bg-[#eef1eb]"
+                  className="group relative grid size-20 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-full border border-[#cfd5c9] bg-[#f4f6f2] text-lg font-semibold text-[#2c3327] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime"
+                  aria-label={t("account.changePhoto")}
                 >
-                  <Camera size={13} /> {t("account.changePhoto")}
+                  {shownAvatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={shownAvatar}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="block size-full object-cover"
+                    />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                  <span className="absolute inset-0 grid place-items-center bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <Camera size={20} />
+                  </span>
                 </button>
-                <span className="text-[10px] text-[#7b8176]">
-                  {t("account.photoHint")}
-                </span>
+
+                <div className="flex min-w-0 flex-col items-start gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-[#cfd5c9] bg-white px-3.5 text-xs font-medium text-[#171a15] transition-colors hover:border-[#171a15] hover:bg-[#f1f3ee] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime"
+                  >
+                    <Camera size={14} />
+                    {t("account.changePhoto")}
+                  </button>
+                  <span className="text-xs leading-snug text-[#6b7066]">
+                    {t("account.photoHint")}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="display-name-input"
-                className="text-[11px] font-medium text-[#242820]"
-              >
-                {t("account.displayNameLabel")}
-              </label>
-              <input
-                id="display-name-input"
-                type="text"
-                maxLength={60}
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder={t("account.displayNamePlaceholder")}
-                className="w-full h-10 px-3 rounded border border-[#dce1d7] bg-white text-xs text-[#171a15] focus:outline-none focus:border-[#171a15]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center justify-center gap-2 min-h-9.5 px-4 rounded-md bg-[#171a15] text-white text-xs font-medium cursor-pointer transition-colors hover:bg-[#30372c] disabled:opacity-60"
-              >
-                {saving ? (
-                  <>
-                    <LoaderCircle size={14} className="animate-spin" />
-                    {t("account.saving")}
-                  </>
-                ) : (
-                  <>
-                    <Check size={14} />
-                    {t("account.saveChanges")}
-                  </>
-                )}
-              </button>
-
-              {feedback && (
-                <p
-                  role="status"
-                  className={`m-0 text-[11px] ${
-                    feedback.type === "success"
-                      ? "text-[#4b7d35] font-medium"
-                      : "text-[#a24132]"
-                  }`}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="display-name-input"
+                  className="text-xs font-medium text-[#242820]"
                 >
-                  {feedback.text}
-                </p>
+                  {t("account.displayNameLabel")}
+                </label>
+                <input
+                  id="display-name-input"
+                  type="text"
+                  maxLength={60}
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder={t("account.displayNamePlaceholder")}
+                  className="h-11 w-full rounded-md border border-[#cfd5c9] bg-white px-3 text-base text-[#171a15] placeholder:text-[#9aa095] focus:border-[#171a15] focus:outline-none focus:ring-2 focus:ring-lime/40 sm:text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[#171a15] px-5 text-sm font-medium text-white transition-colors hover:bg-[#30372c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171a15] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                >
+                  {saving ? (
+                    <>
+                      <LoaderCircle size={16} className="animate-spin" />
+                      {t("account.saving")}
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      {t("account.saveChanges")}
+                    </>
+                  )}
+                </button>
+
+                {feedback && (
+                  <p
+                    role="status"
+                    className={`m-0 text-xs leading-snug ${
+                      feedback.type === "success"
+                        ? "font-medium text-[#3f6f2a]"
+                        : "text-[#a24132]"
+                    }`}
+                  >
+                    {feedback.text}
+                  </p>
+                )}
+              </div>
+            </form>
+          )}
+
+          {/* GitHub */}
+          <div className="flex flex-col gap-3">
+            <div className={`${CARD} flex items-center gap-3`}>
+              <span
+                aria-hidden="true"
+                className="grid size-10 shrink-0 place-items-center rounded-full bg-[#f4f6f2] text-[#171a15]"
+              >
+                <SiGithub size={18} />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <strong className="truncate text-sm text-[#242820]">
+                  {t("account.githubAccount")}
+                </strong>
+                <span className="truncate text-xs text-[#6b7066]">
+                  {hasGitHub
+                    ? `${user?.githubUsername ? `@${user.githubUsername}` : ""}${user?.email ? ` · ${user.email}` : ""}`
+                    : t("wallet.githubNotConnected")}
+                </span>
+              </span>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                  hasGitHub
+                    ? "border-[#cfe8c4] bg-[#eef8e9] text-[#3f6f2a]"
+                    : "border-[#e1e5dd] bg-[#f4f5f2] text-[#6b7066]"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`size-1.75 rounded-full ${hasGitHub ? "bg-lime" : "bg-[#b4bab0]"}`}
+                />
+                {hasGitHub
+                  ? t("wallet.githubConnected")
+                  : t("wallet.githubNotConnected")}
+              </span>
+            </div>
+
+            {!hasGitHub && <GitHubSignInButton />}
+          </div>
+
+          {/* Wallet de Solana */}
+          <div className={`${CARD} flex flex-col gap-4`}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-[#242820]">
+                <Wallet size={16} />
+                {t("register.solanaDevnet")}
+              </span>
+              {user?.linkedWallet && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="font-mono text-xs text-[#3f6f2a]">
+                    {user.linkedWallet.slice(0, 4)}…
+                    {user.linkedWallet.slice(-4)} · {t("wallet.walletVerified")}
+                  </span>
+                  <Link
+                    href={`/profile/${user.linkedWallet}`}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#171a15] underline underline-offset-4 hover:opacity-75"
+                  >
+                    {t("account.viewPublicProfile")} <ExternalLink size={12} />
+                  </Link>
+                </div>
               )}
             </div>
-          </form>
-        )}
-
-        {/* Tarjeta GitHub */}
-        <div className="mt-4 flex items-center gap-3.25 w-full p-4 border border-[#e6e9e3] bg-white">
-          <span className="flex min-w-0 flex-1 flex-col gap-1">
-            <strong className="truncate text-[#242820] text-xs">
-              {t("account.githubAccount")}
-            </strong>
-            <span className="truncate text-[#7b8176] text-[10px]">
-              {hasGitHub
-                ? `${user?.githubUsername ? `@${user.githubUsername}` : ""}${user?.email ? ` · ${user.email}` : ""}`
-                : t("wallet.githubNotConnected")}
-            </span>
-          </span>
-          <span className="flex items-center gap-1.75 text-[#568a3f] text-[9px] whitespace-nowrap">
-            <span
-              className={`w-1.75 h-1.75 rounded-full ${hasGitHub ? "bg-lime" : "bg-[#c7ccc3]"}`}
+            <WalletConnect
+              variant="compact"
+              onVerified={() => {
+                void loadAccount();
+              }}
             />
-            {hasGitHub
-              ? t("wallet.githubConnected")
-              : t("wallet.githubNotConnected")}
-          </span>
+          </div>
         </div>
 
-        {!hasGitHub && (
-          <div className="mt-3 w-full">
-            <GitHubSignInButton />
-          </div>
-        )}
-
-        {/* Solana Wallet Card */}
-        <div className="mt-4 flex w-full flex-col gap-3 border border-[#e6e9e3] bg-white p-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground">
-              <Wallet size={14} /> {t("register.solanaDevnet")}
-            </span>
-            {user?.linkedWallet && (
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-mono text-[#568a3f]">
-                  {user.linkedWallet.slice(0, 4)}…{user.linkedWallet.slice(-4)}{" "}
-                  · {t("wallet.walletVerified")}
-                </span>
-                <Link
-                  href={`/profile/${user.linkedWallet}`}
-                  className="inline-flex items-center gap-1 text-[10px] text-[#171a15] underline hover:opacity-75"
-                >
-                  {t("account.viewPublicProfile")} <ExternalLink size={11} />
-                </Link>
-              </div>
-            )}
-          </div>
-          <WalletConnect
-            variant="compact"
-            onVerified={() => {
-              void loadAccount();
-            }}
-          />
-        </div>
-
-        <div className="flex items-start gap-3 mt-6 flex-wrap">
-          {user && <SignOutButton />}
+        {/* Acciones */}
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between">
+          {user ? <SignOutButton /> : <span />}
           <Link
-            className="inline-flex items-center justify-center gap-3 no-underline min-h-11 px-4.5 rounded-md bg-[#171a15] text-white text-xs transition-colors duration-180 hover:bg-[#30372c]"
             href="/bounties"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-lime px-5 text-sm font-semibold text-[#171a15] no-underline transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171a15] sm:w-auto"
           >
             {t("account.goToKredoWork")}
+            <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </section>
 
-      <footer className="flex items-center justify-between gap-5 py-4.25 border-t border-line text-[#858a80] text-[9px] max-[760px]:flex-wrap max-[760px]:[&>span]:w-full">
+      {/* Footer */}
+      <footer className="flex flex-col items-start gap-3 border-t border-line py-4 text-xs text-[#6b7066] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <Brand compact variant="footer" />
         <span>{t("common.builtForMaintainers")}</span>
       </footer>

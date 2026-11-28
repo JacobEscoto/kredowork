@@ -27,35 +27,35 @@ export default function GitHubSignInButton() {
   }
 
   return (
-    <div className="w-full">
+    <div className="flex w-full flex-col gap-2">
       <button
         type="button"
         onClick={() => void signIn()}
         disabled={busy}
-        className="flex items-center gap-3 w-full min-h-15.5 py-2.5 px-3 rounded-md border border-[#e5e8e2] bg-white text-foreground text-left cursor-pointer mb-2.5 transition-colors duration-180 hover:border-[#c5d0be] hover:bg-[#fbfcfa] disabled:cursor-wait disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-3"
+        className="flex min-h-16 w-full cursor-pointer items-center gap-3 rounded-md border border-[#d5dacf] bg-white px-3 py-2.5 text-left text-foreground transition-colors duration-180 hover:border-[#171a15] hover:bg-[#f7f8f5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-70"
       >
         <span
-          className="grid place-items-center flex-none w-9 h-9 text-[#171a15]"
+          className="grid size-8 flex-none place-items-center text-[#171a15] sm:size-9"
           aria-hidden="true"
         >
           {busy ? (
-            <LoaderCircle size={17} className="animate-spin" />
+            <LoaderCircle size={18} className="animate-spin" />
           ) : (
-            <SiGithub size={17} />
+            <SiGithub size={18} />
           )}
         </span>
-        <span className="flex flex-1 flex-col gap-1 min-w-0">
-          <strong className="text-[11px] font-semibold truncate">
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <strong className="truncate text-[13px] font-semibold">
             {busy ? "Connecting to GitHub…" : "Continue with GitHub"}
           </strong>
-          <span className="text-[#82877d] text-[9px] truncate">
+          <span className="truncate text-xs text-[#6b7066]">
             Use your GitHub account to sign in
           </span>
         </span>
       </button>
       {error && (
         <p
-          className="m-0 p-3 border border-[#e4c5a3] bg-[#fffaf4] text-[#59442f] text-[11px]"
+          className="m-0 border border-[#e4c5a3] bg-[#fffaf4] p-3 text-xs leading-normal text-[#59442f]"
           role="alert"
         >
           {error}
